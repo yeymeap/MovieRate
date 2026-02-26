@@ -16,6 +16,7 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private bool _isLoading = false;
     [ObservableProperty] private bool _isRegisterMode = false;
+    [ObservableProperty] private string _confirmPassword = string.Empty;
 
     public event Action? OnLoginSuccess;
 
@@ -31,15 +32,18 @@ public partial class LoginViewModel : ViewModelBase
     private async Task SubmitAsync()
     {
         ErrorMessage = string.Empty;
-        IsLoading = true;
 
-        Console.WriteLine($"Attempting {(IsRegisterMode ? "register" : "login")} with email: {Email}");
+        if (IsRegisterMode && Password != ConfirmPassword)
+        {
+            ErrorMessage = "Passwords do not match.";
+            return;
+        }
+
+        IsLoading = true;
 
         var (success, error) = IsRegisterMode
             ? await _authService.RegisterAsync(Email, Password, DisplayName)
             : await _authService.LoginAsync(Email, Password);
-
-        Console.WriteLine($"Success: {success}, Error: {error}");
 
         IsLoading = false;
 

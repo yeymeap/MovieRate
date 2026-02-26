@@ -6,9 +6,9 @@ namespace MovieRate.Services;
 
 public static class ConfigService
 {
-    private static FirebaseConfig? _config;
+    private static SupabaseConfig? _config;
 
-    public static FirebaseConfig GetFirebaseConfig()
+    public static SupabaseConfig GetSupabaseConfig()
     {
         if (_config != null) return _config;
 
@@ -17,8 +17,8 @@ public static class ConfigService
             .AddJsonFile("appsettings.json", optional: false)
             .Build();
 
-        _config = new FirebaseConfig();
-        configuration.GetSection("Firebase").Bind(_config);
+        _config = new SupabaseConfig();
+        configuration.GetSection("Supabase").Bind(_config);
         return _config;
     }
 }

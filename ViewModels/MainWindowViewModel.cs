@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MovieRate.Services;
-using MovieRate.ViewModels;
 
 namespace MovieRate.ViewModels;
 
@@ -10,17 +9,21 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private ViewModelBase _currentView;
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(AuthService authService)
     {
-        _authService = new AuthService();
+        _authService = authService;
 
         if (_authService.IsLoggedIn)
-            CurrentView = new HomeViewModel(_authService);
+        {
+            var homeVm = new HomeViewModel(_authService);
+            homeVm.OnLogout += HandleLogout;
+            _currentView = homeVm;
+        }
         else
         {
             var loginVm = new LoginViewModel(_authService);
             loginVm.OnLoginSuccess += HandleLoginSuccess;
-            CurrentView = loginVm;
+            _currentView = loginVm;
         }
     }
 

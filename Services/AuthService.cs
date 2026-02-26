@@ -1,48 +1,46 @@
-﻿using System.Threading.Tasks;
-using Firebase.Auth;
-using Firebase.Auth.Providers;
-using Firebase.Auth.Repository;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using Supabase;
+using MovieRate.Models;
 
 namespace MovieRate.Services;
 
 public class AuthService
 {
-    private readonly FirebaseAuthClient _client;
-    private UserCredential? _currentCredential;
-    private User? _persistedUser;
+    private readonly Client _client;
 
-    public User? CurrentUser => _currentCredential?.User ?? _persistedUser;
+    public Supabase.Gotrue.User? CurrentUser => _client.Auth.CurrentUser;
     public bool IsLoggedIn => CurrentUser != null;
 
     public AuthService()
     {
-        var config = ConfigService.GetFirebaseConfig();
-
-        var authConfig = new FirebaseAuthConfig
+        var config = ConfigService.GetSupabaseConfig();
+        _client = new Client(config.Url, config.AnonKey, new SupabaseOptions
         {
-            ApiKey = config.ApiKey,
-            AuthDomain = config.AuthDomain,
-            Providers = new FirebaseAuthProvider[]
-            {
-                new EmailProvider()
-            },
-            UserRepository = new FileUserRepository("auth")
-        };
-
-        _client = new FirebaseAuthClient(authConfig);
-        _persistedUser = _client.User;
+            AutoRefreshToken = true,
+            AutoConnectRealtime = false,
+            SessionHandler = new SupabaseSessionHandler()
+        });
     }
 
+    public async Task InitializeAsync()
+    {
+        await _client.InitializeAsync();
+        _client.Auth.LoadSession();
+        await _client.Auth.RetrieveSessionAsync();
+    }
+    
     public async Task<(bool success, string error)> RegisterAsync(string email, string password, string displayName)
     {
         try
         {
-            _currentCredential = await _client.CreateUserWithEmailAndPasswordAsync(email, password, displayName);
-            return (true, string.Empty);
+            var response = await _client.Auth.SignUp(email, password);
+            return (response?.User != null, response?.User == null ? "Registration failed. Please try again." : string.Empty);
         }
-        catch (FirebaseAuthException ex)
+        catch (Exception ex)
         {
-            return (false, ParseFirebaseError(ex.Reason));
+            return (false, ParseErrorMessage(ex.Message));
         }
     }
 
@@ -50,29 +48,56 @@ public class AuthService
     {
         try
         {
-            _currentCredential = await _client.SignInWithEmailAndPasswordAsync(email, password);
-            return (true, string.Empty);
+            var response = await _client.Auth.SignIn(email, password);
+            return (response?.User != null, response?.User == null ? "Login failed. Please try again." : string.Empty);
         }
-        catch (FirebaseAuthException ex)
+        catch (Exception ex)
         {
-            return (false, ParseFirebaseError(ex.Reason));
+            return (false, ParseErrorMessage(ex.Message));
         }
     }
 
-    public void Logout()
+    private string ParseErrorMessage(string raw)
     {
-        _client.SignOut();
-        _currentCredential = null;
-        _persistedUser = null;
+        if (raw.Contains("Invalid login credentials")) return "Incorrect email or password.";
+        if (raw.Contains("Email not confirmed")) return "Please confirm your email before logging in.";
+        if (raw.Contains("User already registered")) return "An account with this email already exists.";
+        if (raw.Contains("Password should be at least")) return "Password must be at least 6 characters.";
+        if (raw.Contains("Unable to validate email address")) return "Please enter a valid email address.";
+        if (raw.Contains("Network")) return "Network error. Please check your connection.";
+        return "Something went wrong. Please try again.";
     }
 
-    private string ParseFirebaseError(AuthErrorReason reason) => reason switch
+    public async Task LogoutAsync()
     {
-        AuthErrorReason.WrongPassword => "Incorrect password.",
-        AuthErrorReason.UnknownEmailAddress => "No account found with that email.",
-        AuthErrorReason.EmailExists => "An account with this email already exists.",
-        AuthErrorReason.WeakPassword => "Password is too weak.",
-        AuthErrorReason.InvalidEmailAddress => "Invalid email address.",
-        _ => "Something went wrong. Please try again."
-    };
+        await _client.Auth.SignOut();
+    }
+
+    public Client GetClient() => _client;
+}
+
+public class SupabaseSessionHandler : Supabase.Gotrue.Interfaces.IGotrueSessionPersistence<Supabase.Gotrue.Session>
+{
+    private readonly string _path = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "MovieRate", "session.json");
+
+    public void SaveSession(Supabase.Gotrue.Session session)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        File.WriteAllText(_path, System.Text.Json.JsonSerializer.Serialize(session));
+    }
+
+    public Supabase.Gotrue.Session? LoadSession()
+    {
+        if (!File.Exists(_path)) return null;
+        var json = File.ReadAllText(_path);
+        return System.Text.Json.JsonSerializer.Deserialize<Supabase.Gotrue.Session>(json);
+    }
+
+    public void DestroySession()
+    {
+        if (File.Exists(_path))
+            File.Delete(_path);
+    }
 }

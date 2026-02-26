@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using MovieRate.Services;
 
@@ -8,8 +9,7 @@ public partial class HomeViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
 
-    public string WelcomeMessage => $"Welcome, {_authService.CurrentUser?.Info?.DisplayName ?? "user"}!";
-
+    public string WelcomeMessage => $"Welcome, {_authService.CurrentUser?.Email ?? "user"}!";
     public event Action? OnLogout;
 
     public HomeViewModel(AuthService authService)
@@ -18,9 +18,9 @@ public partial class HomeViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Logout()
+    private async Task Logout()
     {
-        _authService.Logout();
+        await _authService.LogoutAsync();
         OnLogout?.Invoke();
     }
 }

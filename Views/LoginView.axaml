@@ -7,7 +7,7 @@
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="320">
         <StackPanel Spacing="16">
 
-            <TextBlock Text="MovieList"
+            <TextBlock Text="Movie Rate"
                        FontSize="32"
                        FontWeight="Bold"
                        HorizontalAlignment="Center"
@@ -26,7 +26,13 @@
                      Text="{Binding Password}"
                      PasswordChar="●"
                      KeyboardNavigation.TabIndex="2"/>
-
+            
+            <TextBox Watermark="Confirm Password"
+                     Text="{Binding ConfirmPassword}"
+                     PasswordChar="●"
+                     IsVisible="{Binding IsRegisterMode}"
+                     KeyboardNavigation.TabIndex="3"/>
+            
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="Red"
                        TextWrapping="Wrap"
