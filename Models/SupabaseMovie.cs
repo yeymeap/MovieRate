@@ -35,5 +35,5 @@ public class SupabaseMovie : BaseModel
     public string AddedBy { get; set; } = string.Empty;
 
     [Column("added_at")]
-    public DateTime AddedAt { get; set; }
+    public DateTimeOffset AddedAt { get; set; }
 }

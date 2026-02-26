@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Postgrest.Attributes;
 using Postgrest.Models;
 
@@ -15,6 +16,9 @@ public class SupabaseList : BaseModel
 
     [Column("owner_id")]
     public string OwnerId { get; set; } = string.Empty;
+
+    [Column("members")]
+    public Dictionary<string, string> Members { get; set; } = new();
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

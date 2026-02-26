@@ -16,6 +16,9 @@ public partial class HomeViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<MovieList> _lists = new();
     [ObservableProperty] private bool _isLoading = false;
     [ObservableProperty] private string _newListName = string.Empty;
+    [ObservableProperty] private string _shareEmail = string.Empty;
+    [ObservableProperty] private string _shareMessage = string.Empty;
+    [ObservableProperty] private MovieList? _listToShare = null;
 
     public string WelcomeMessage => $"Welcome, {_authService.CurrentUser?.Email ?? "user"}!";
 
@@ -69,5 +72,46 @@ public partial class HomeViewModel : ViewModelBase
     {
         Console.WriteLine($"Selected list: {list.Name}");
         SelectedList = new ListViewModel(_authService, _supabaseService, list);
+    }
+    
+    [RelayCommand]
+    private void StartShare(MovieList list)
+    {
+        ListToShare = list;
+        ShareEmail = string.Empty;
+        ShareMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void CancelShare()
+    {
+        ListToShare = null;
+        ShareEmail = string.Empty;
+        ShareMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task ShareListAsync()
+    {
+        if (ListToShare == null || string.IsNullOrWhiteSpace(ShareEmail)) return;
+
+        var profile = await _supabaseService.GetProfileByEmailAsync(ShareEmail);
+        if (profile == null)
+        {
+            ShareMessage = "No user found with that email.";
+            return;
+        }
+
+        if (profile.Id == _authService.CurrentUser?.Id)
+        {
+            ShareMessage = "You can't share a list with yourself.";
+            return;
+        }
+
+        await _supabaseService.ShareListAsync(ListToShare.Id, profile.Id);
+        ShareMessage = $"List shared with {ShareEmail} successfully!";
+        await Task.Delay(2000);
+        ListToShare = null;
+        ShareMessage = string.Empty;
     }
 }

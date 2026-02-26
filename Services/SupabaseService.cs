@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MovieRate.Models;
@@ -88,7 +89,7 @@ public class SupabaseService
                 Category = item.Category,
                 WatchedStatus = Enum.Parse<WatchedStatus>(item.WatchedStatus),
                 AddedBy = item.AddedBy,
-                AddedAt = item.AddedAt
+                AddedAt = item.AddedAt.ToLocalTime()
             });
         }
         return movies;
@@ -122,7 +123,7 @@ public class SupabaseService
             PosterUrl = item.PosterUrl,
             WatchedStatus = Enum.Parse<WatchedStatus>(item.WatchedStatus),
             AddedBy = item.AddedBy,
-            AddedAt = item.AddedAt
+            AddedAt = item.AddedAt.ToLocalTime()
         };
     }
     
@@ -149,6 +150,65 @@ public class SupabaseService
             .From<SupabaseMovie>()
             .Where(x => x.Id == movieId)
             .Set(x => x.WatchedStatus, status.ToString())
+            .Update();
+    }
+    
+    public async Task<SupabaseProfile?> GetProfileByEmailAsync(string email)
+    {
+        var response = await _client
+            .From<SupabaseProfile>()
+            .Where(x => x.Email == email)
+            .Single();
+
+        return response;
+    }
+
+    public async Task ShareListAsync(string listId, string userId)
+    {
+        var list = await _client
+            .From<SupabaseList>()
+            .Where(x => x.Id == listId)
+            .Single();
+
+        if (list == null) return;
+
+        list.Members[userId] = "editor";
+
+        await _client
+            .From<SupabaseList>()
+            .Where(x => x.Id == listId)
+            .Set(x => x.Members, list.Members)
+            .Update();
+    }
+    
+    public async Task<List<SupabaseProfile>> GetListMembersAsync(Dictionary<string, string> members)
+    {
+        var memberIds = members.Keys.ToList();
+        if (memberIds.Count == 0) return new List<SupabaseProfile>();
+
+        var response = await _client
+            .From<SupabaseProfile>()
+            .Filter("id", Postgrest.Constants.Operator.In, memberIds)
+            .Get();
+
+        return response.Models;
+    }
+
+    public async Task RemoveMemberAsync(string listId, string userId)
+    {
+        var list = await _client
+            .From<SupabaseList>()
+            .Where(x => x.Id == listId)
+            .Single();
+
+        if (list == null) return;
+
+        list.Members.Remove(userId);
+
+        await _client
+            .From<SupabaseList>()
+            .Where(x => x.Id == listId)
+            .Set(x => x.Members, list.Members)
             .Update();
     }
 }

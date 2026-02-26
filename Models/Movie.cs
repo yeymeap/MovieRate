@@ -13,7 +13,7 @@ public partial class Movie : ObservableObject
     [ObservableProperty] private string _category = string.Empty;
     [ObservableProperty] private WatchedStatus _watchedStatus = WatchedStatus.Unwatched;
     [ObservableProperty] private string _addedBy = string.Empty;
-    [ObservableProperty] private DateTime _addedAt = DateTime.UtcNow;
+    [ObservableProperty] private DateTimeOffset _addedAt = DateTimeOffset.UtcNow;
 
     public Func<int, System.Threading.Tasks.Task>? RatingChangedCallback { get; set; }
 
