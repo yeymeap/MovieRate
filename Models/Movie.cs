@@ -1,18 +1,33 @@
 ﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MovieRate.Models;
 
-public class Movie
+public partial class Movie : ObservableObject
 {
-    public string Id { get; set; } = string.Empty;
-    public string TmdbId { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string PosterUrl { get; set; } = string.Empty;
-    public int Rating { get; set; } = 0;
-    public string Category { get; set; } = string.Empty;
-    public WatchedStatus WatchedStatus { get; set; } = WatchedStatus.Unwatched;
-    public string AddedBy { get; set; } = string.Empty;
-    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+    [ObservableProperty] private string _id = string.Empty;
+    [ObservableProperty] private string _tmdbId = string.Empty;
+    [ObservableProperty] private string _title = string.Empty;
+    [ObservableProperty] private string _posterUrl = string.Empty;
+    [ObservableProperty] private int _rating = 0;
+    [ObservableProperty] private string _category = string.Empty;
+    [ObservableProperty] private WatchedStatus _watchedStatus = WatchedStatus.Unwatched;
+    [ObservableProperty] private string _addedBy = string.Empty;
+    [ObservableProperty] private DateTime _addedAt = DateTime.UtcNow;
+
+    public Func<int, System.Threading.Tasks.Task>? RatingChangedCallback { get; set; }
+
+    partial void OnRatingChanged(int value)
+    {
+        RatingChangedCallback?.Invoke(value);
+    }
+    
+    public Func<WatchedStatus, System.Threading.Tasks.Task>? WatchedStatusChangedCallback { get; set; }
+
+    partial void OnWatchedStatusChanged(WatchedStatus value)
+    {
+        WatchedStatusChangedCallback?.Invoke(value);
+    }
 }
 
 public enum WatchedStatus

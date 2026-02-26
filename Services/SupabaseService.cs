@@ -94,7 +94,7 @@ public class SupabaseService
         return movies;
     }
     
-    public async Task<Movie?> AddMovieAsync(string listId, string title, string category)
+    public async Task<Movie?> AddMovieAsync(string listId, string title, string category, string tmdbId = "", string posterUrl = "")
     {
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
         var newMovie = new SupabaseMovie
@@ -102,6 +102,8 @@ public class SupabaseService
             ListId = listId,
             Title = title,
             Category = category,
+            TmdbId = tmdbId,
+            PosterUrl = posterUrl,
             WatchedStatus = "Unwatched",
             AddedBy = userId
         };
@@ -116,6 +118,8 @@ public class SupabaseService
             Id = item.Id,
             Title = item.Title,
             Category = item.Category,
+            TmdbId = item.TmdbId,
+            PosterUrl = item.PosterUrl,
             WatchedStatus = Enum.Parse<WatchedStatus>(item.WatchedStatus),
             AddedBy = item.AddedBy,
             AddedAt = item.AddedAt
@@ -128,5 +132,23 @@ public class SupabaseService
             .From<SupabaseMovie>()
             .Where(x => x.Id == movieId)
             .Delete();
+    }
+    
+    public async Task UpdateMovieRatingAsync(string movieId, int rating)
+    {
+        await _client
+            .From<SupabaseMovie>()
+            .Where(x => x.Id == movieId)
+            .Set(x => x.Rating, rating)
+            .Update();
+    }
+    
+    public async Task UpdateMovieWatchedStatusAsync(string movieId, WatchedStatus status)
+    {
+        await _client
+            .From<SupabaseMovie>()
+            .Where(x => x.Id == movieId)
+            .Set(x => x.WatchedStatus, status.ToString())
+            .Update();
     }
 }
