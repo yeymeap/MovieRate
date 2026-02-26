@@ -1,20 +1,21 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MovieRate.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:views="using:MovieRate.Views"
         x:Class="MovieRate.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="MovieRate">
+        Title="MovieList"
+        Width="1000" Height="700">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <ContentControl Content="{Binding CurrentView}">
+        <ContentControl.DataTemplates>
+            <DataTemplate DataType="vm:LoginViewModel">
+                <views:LoginView/>
+            </DataTemplate>
+            <DataTemplate DataType="vm:HomeViewModel">
+                <views:HomeView/>
+            </DataTemplate>
+        </ContentControl.DataTemplates>
+    </ContentControl>
 
 </Window>

@@ -1,0 +1,52 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MovieRate.ViewModels"
+             x:Class="MovieRate.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="320">
+        <StackPanel Spacing="16">
+
+            <TextBlock Text="MovieList"
+                       FontSize="32"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Margin="0 0 0 8"/>
+
+            <TextBox Watermark="Email"
+                     Text="{Binding Email}"
+                     KeyboardNavigation.TabIndex="0"/>
+
+            <TextBox Watermark="Display Name"
+                     Text="{Binding DisplayName}"
+                     IsVisible="{Binding IsRegisterMode}"
+                     KeyboardNavigation.TabIndex="1"/>
+
+            <TextBox Watermark="Password"
+                     Text="{Binding Password}"
+                     PasswordChar="●"
+                     KeyboardNavigation.TabIndex="2"/>
+
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="Red"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <Button Content="{Binding SubmitButtonText}"
+                    Command="{Binding SubmitCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    IsDefault="True"/>
+
+            <Button Content="{Binding ToggleButtonText}"
+                    Command="{Binding ToggleModeCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"/>
+
+            <ProgressBar IsIndeterminate="True"
+                         IsVisible="{Binding IsLoading}"
+                         Height="4"/>
+
+        </StackPanel>
+    </Grid>
+</UserControl>
