@@ -52,3 +52,21 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Rider IDE files
+.idea/
+*.iml
+*.iws
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# VS Code
+.vscode/

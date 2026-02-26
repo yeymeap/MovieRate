@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace MovieRate;
+namespace MovieRate.Views;
 
 public partial class MainWindow : Window
 {
