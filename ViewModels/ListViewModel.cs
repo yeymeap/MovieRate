@@ -18,6 +18,7 @@ public partial class ListViewModel : ViewModelBase
     private readonly TmdbService _tmdbService = new();
     private readonly MovieList _list;
     private CancellationTokenSource? _searchCts;
+    private List<Movie> _allMovies = new();
 
     [ObservableProperty] private ObservableCollection<Movie> _movies = new();
     [ObservableProperty] private bool _isLoading = false;
@@ -27,7 +28,9 @@ public partial class ListViewModel : ViewModelBase
     [ObservableProperty] private bool _isSearching = false;
     [ObservableProperty] private bool _showSearchResults = false;
     [ObservableProperty] private string _statusMessage = string.Empty;
-
+    [ObservableProperty] private string _sortBy = "Date Added";
+    [ObservableProperty] private string _searchQuery = string.Empty;
+    
     public bool HasNoMovies => Movies.Count == 0;
     public string ListName => _list.Name;
 
@@ -64,9 +67,9 @@ public partial class ListViewModel : ViewModelBase
     private async Task LoadMoviesAsync()
     {
         IsLoading = true;
-        var movies = await _supabaseService.GetMoviesAsync(_list.Id);
-        Movies = new ObservableCollection<Movie>(
-            (movies as IEnumerable<Movie>).Select(AttachCallbacks));
+        _allMovies = await _supabaseService.GetMoviesAsync(_list.Id);
+        _allMovies = _allMovies.Select(AttachCallbacks).ToList();
+        ApplyFilterAndSort();
         Movies.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoMovies));
         OnPropertyChanged(nameof(HasNoMovies));
         IsLoading = false;
@@ -131,7 +134,7 @@ public partial class ListViewModel : ViewModelBase
         var movie = await _supabaseService.AddMovieAsync(
             _list.Id,
             tmdbMovie.Title,
-            NewMovieCategory,
+            tmdbMovie.Genres,
             tmdbMovie.TmdbId,
             tmdbMovie.PosterUrl);
         if (movie != null)
@@ -187,5 +190,39 @@ public partial class ListViewModel : ViewModelBase
             WatchedStatus.Watched => WatchedStatus.Unwatched,
             _ => WatchedStatus.Unwatched
         };
+    }
+    
+    public IEnumerable<string> SortOptions => new[]
+    {
+        "Date Added", "Title", "Rating", "Watched Status"
+    };
+
+    partial void OnSortByChanged(string value)
+    {
+        ApplyFilterAndSort();
+    }
+
+    private void ApplyFilterAndSort()
+    {
+        var filtered = string.IsNullOrWhiteSpace(SearchQuery)
+            ? _allMovies
+            : _allMovies.Where(m => m.Title.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        var sorted = SortBy switch
+        {
+            "Title" => filtered.OrderBy(m => m.Title),
+            "Rating" => filtered.OrderByDescending(m => m.Rating),
+            "Watched Status" => filtered.OrderBy(m => m.WatchedStatus),
+            _ => filtered.OrderBy(m => m.AddedAt)
+        };
+
+        Movies = new ObservableCollection<Movie>(sorted);
+        Movies.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoMovies));
+        OnPropertyChanged(nameof(HasNoMovies));
+    }
+    
+    partial void OnSearchQueryChanged(string value)
+    {
+        ApplyFilterAndSort();
     }
 }

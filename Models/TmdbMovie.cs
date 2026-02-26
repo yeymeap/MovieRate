@@ -7,4 +7,5 @@ public class TmdbMovie
     public string PosterUrl { get; set; } = string.Empty;
     public string Overview { get; set; } = string.Empty;
     public string ReleaseDate { get; set; } = string.Empty;
+    public string Genres { get; set; } = string.Empty;
 }
