@@ -1,15 +1,82 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MovieRate.ViewModels"
+             xmlns:models="using:MovieRate.Models"
              x:Class="MovieRate.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-        <TextBlock Text="{Binding WelcomeMessage}"
-                   FontSize="24"/>
-        <Button Content="Logout"
-                Command="{Binding LogoutCommand}"
-                HorizontalAlignment="Center"/>
-    </StackPanel>
+  <Grid ColumnDefinitions="260,*">
+
+    <!-- Sidebar -->
+    <Border Grid.Column="0" Background="#1e1e1e" Padding="16">
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- App Title -->
+        <TextBlock Grid.Row="0"
+                   Text="MovieRate"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   Margin="0 0 0 24"/>
+
+        <!-- Lists -->
+        <StackPanel Grid.Row="1" Spacing="4">
+          <TextBlock Text="MY LISTS"
+                     FontSize="11"
+                     Opacity="0.5"
+                     Margin="0 0 0 8"/>
+
+          <ProgressBar IsIndeterminate="True"
+                       IsVisible="{Binding IsLoading}"
+                       Height="2"
+                       Margin="0 0 0 8"/>
+
+          <ItemsControl ItemsSource="{Binding Lists}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="models:MovieList">
+                <Grid ColumnDefinitions="*,Auto" Margin="0 2">
+                  <Button Grid.Column="0"
+                          Content="{Binding Name}"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Left"
+                          Classes="Flat"/>
+                  <Button Grid.Column="1"
+                          Content="✕"
+                          Command="{Binding $parent[UserControl].((vm:HomeViewModel)DataContext).DeleteListCommand}"
+                          CommandParameter="{Binding}"
+                          Classes="Flat"
+                          Opacity="0.5"
+                          Padding="4"/>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- New List + Logout -->
+        <StackPanel Grid.Row="2" Spacing="8">
+          <TextBox Watermark="New list name..."
+                   Text="{Binding NewListName}"/>
+          <Button Content="Create List"
+                  Command="{Binding CreateListCommand}"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Center"/>
+          <Button Content="Logout"
+                  Command="{Binding LogoutCommand}"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Center"
+                  Opacity="0.6"/>
+        </StackPanel>
+
+      </Grid>
+    </Border>
+
+    <!-- Main Content -->
+    <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBlock Text="Select a list or create a new one"
+                 Opacity="0.4"
+                 FontSize="16"/>
+    </Grid>
+
+  </Grid>
 
 </UserControl>
