@@ -61,4 +61,13 @@ public partial class HomeViewModel : ViewModelBase
         await _authService.LogoutAsync();
         OnLogout?.Invoke();
     }
+    
+    [ObservableProperty] private ListViewModel? _selectedList;
+
+    [RelayCommand]
+    private void SelectList(MovieList list)
+    {
+        Console.WriteLine($"Selected list: {list.Name}");
+        SelectedList = new ListViewModel(_authService, _supabaseService, list);
+    }
 }

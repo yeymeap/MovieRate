@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MovieRate.ViewModels"
              xmlns:models="using:MovieRate.Models"
+             xmlns:views="using:MovieRate.Views"
              x:Class="MovieRate.Views.HomeView"
              x:DataType="vm:HomeViewModel">
 
@@ -13,7 +14,7 @@
 
         <!-- App Title -->
         <TextBlock Grid.Row="0"
-                   Text="MovieRate"
+                   Text="Movie Rate"
                    FontSize="22"
                    FontWeight="Bold"
                    Margin="0 0 0 24"/>
@@ -38,6 +39,8 @@
                           Content="{Binding Name}"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Left"
+                          Command="{Binding $parent[UserControl].((vm:HomeViewModel)DataContext).SelectListCommand}"
+                          CommandParameter="{Binding}"
                           Classes="Flat"/>
                   <Button Grid.Column="1"
                           Content="✕"
@@ -71,11 +74,21 @@
     </Border>
 
     <!-- Main Content -->
-    <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Panel Grid.Column="1">
       <TextBlock Text="Select a list or create a new one"
                  Opacity="0.4"
-                 FontSize="16"/>
-    </Grid>
+                 FontSize="16"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 IsVisible="{Binding SelectedList, Converter={x:Static ObjectConverters.IsNull}}"/>
+      <ContentControl Content="{Binding SelectedList}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:ListViewModel">
+            <views:ListView/>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Panel>
 
   </Grid>
 

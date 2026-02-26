@@ -1,0 +1,88 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MovieRate.ViewModels"
+             xmlns:models="using:MovieRate.Models"
+             x:Class="MovieRate.Views.ListView"
+             x:DataType="vm:ListViewModel">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
+      <TextBlock Text="{Binding ListName}"
+                 FontSize="22"
+                 FontWeight="Bold"/>
+    </Border>
+
+    <!-- Movies -->
+    <ScrollViewer Grid.Row="1" Padding="24">
+      <StackPanel Spacing="8">
+        <ProgressBar IsIndeterminate="True"
+                     IsVisible="{Binding IsLoading}"
+                     Height="2"
+                     Margin="0 0 0 8"/>
+
+        <TextBlock Text="No movies yet. Add one!"
+                   Opacity="0.4"
+                   FontSize="16"
+                   HorizontalAlignment="Center"
+                   Margin="0 32"
+                   IsVisible="{Binding !IsLoading}"/>
+
+        <ItemsControl ItemsSource="{Binding Movies}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="models:Movie">
+              <Border Background="#1e1e1e"
+                      CornerRadius="8"
+                      Padding="16"
+                      Margin="0 4">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Category}"
+                               Opacity="0.5"
+                               FontSize="12"
+                               IsVisible="{Binding Category, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <TextBlock Text="{Binding WatchedStatus}"
+                               Opacity="0.5"
+                               FontSize="12"/>
+                  </StackPanel>
+                  <Button Grid.Column="1"
+                          Content="✕"
+                          Command="{Binding $parent[UserControl].((vm:ListViewModel)DataContext).DeleteMovieCommand}"
+                          CommandParameter="{Binding}"
+                          Classes="Flat"
+                          Opacity="0.5"
+                          VerticalAlignment="Top"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Add Movie Form -->
+    <Border Grid.Row="2" Padding="24 16" BorderThickness="0 1 0 0" BorderBrush="#333">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <TextBox Grid.Column="0"
+                 Watermark="Movie title..."
+                 Text="{Binding NewMovieTitle}"
+                 Margin="0 0 8 0"/>
+        <TextBox Grid.Column="1"
+                 Watermark="Category (optional)"
+                 Text="{Binding NewMovieCategory}"
+                 Width="160"
+                 Margin="0 0 8 0"/>
+        <Button Grid.Column="2"
+                Content="Add Movie"
+                Command="{Binding AddMovieCommand}"/>
+      </Grid>
+    </Border>
+
+  </Grid>
+
+</UserControl>

@@ -4,7 +4,7 @@
         xmlns:views="using:MovieRate.Views"
         x:Class="MovieRate.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="MovieList"
+        Title="Movie Rate"
         Width="1000" Height="700">
 
     <ContentControl Content="{Binding CurrentView}">
