@@ -70,3 +70,6 @@ Thumbs.db
 
 # VS Code
 .vscode/
+
+# App settings
+appsettings.json
