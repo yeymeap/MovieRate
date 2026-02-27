@@ -57,7 +57,8 @@
                             CommandParameter="{Binding}"
                             Classes="Flat"
                             Opacity="0.5"
-                            Padding="4"/>
+                            Padding="4"
+                            IsVisible="{Binding IsOwner}"/>
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

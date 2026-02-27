@@ -10,4 +10,5 @@ public class MovieList
     public string OwnerId { get; set; } = string.Empty;
     public Dictionary<string, string> Members { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsOwner { get; set; } = false;
 }

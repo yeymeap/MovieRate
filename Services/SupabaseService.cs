@@ -32,7 +32,9 @@ public class SupabaseService
                 Id = item.Id,
                 Name = item.Name,
                 OwnerId = item.OwnerId,
-                CreatedAt = item.CreatedAt
+                Members = item.Members,
+                CreatedAt = item.CreatedAt,
+                IsOwner = item.OwnerId == _authService.CurrentUser?.Id
             });
         }
         return lists;
@@ -57,7 +59,9 @@ public class SupabaseService
             Id = item.Id,
             Name = item.Name,
             OwnerId = item.OwnerId,
-            CreatedAt = item.CreatedAt
+            Members = item.Members,
+            CreatedAt = item.CreatedAt,
+            IsOwner = true
         };
     }
 
@@ -79,23 +83,24 @@ public class SupabaseService
         var movies = new List<Movie>();
         foreach (var item in response.Models)
         {
+            var userData = await GetUserMovieDataAsync(item.Id);
             movies.Add(new Movie
             {
                 Id = item.Id,
                 TmdbId = item.TmdbId,
                 Title = item.Title,
                 PosterUrl = item.PosterUrl,
-                Rating = item.Rating,
                 Category = item.Category,
-                WatchedStatus = Enum.Parse<WatchedStatus>(item.WatchedStatus),
+                ReleaseDate = item.ReleaseDate,
                 AddedBy = item.AddedBy,
-                AddedAt = item.AddedAt.ToLocalTime()
+                Rating = userData?.Rating ?? 0,
+                WatchedStatus = userData != null ? Enum.Parse<WatchedStatus>(userData.WatchedStatus) : WatchedStatus.Unwatched
             });
         }
         return movies;
     }
     
-    public async Task<Movie?> AddMovieAsync(string listId, string title, string category, string tmdbId = "", string posterUrl = "")
+    public async Task<Movie?> AddMovieAsync(string listId, string title, string category, string tmdbId = "", string posterUrl = "", string releaseDate = "")
     {
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
         var newMovie = new SupabaseMovie
@@ -105,7 +110,7 @@ public class SupabaseService
             Category = category,
             TmdbId = tmdbId,
             PosterUrl = posterUrl,
-            WatchedStatus = "Unwatched",
+            ReleaseDate = releaseDate,
             AddedBy = userId
         };
 
@@ -121,9 +126,8 @@ public class SupabaseService
             Category = item.Category,
             TmdbId = item.TmdbId,
             PosterUrl = item.PosterUrl,
-            WatchedStatus = Enum.Parse<WatchedStatus>(item.WatchedStatus),
-            AddedBy = item.AddedBy,
-            AddedAt = item.AddedAt.ToLocalTime()
+            ReleaseDate = item.ReleaseDate,
+            AddedBy = item.AddedBy
         };
     }
     
@@ -137,20 +141,15 @@ public class SupabaseService
     
     public async Task UpdateMovieRatingAsync(string movieId, int rating)
     {
-        await _client
-            .From<SupabaseMovie>()
-            .Where(x => x.Id == movieId)
-            .Set(x => x.Rating, rating)
-            .Update();
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+        var existing = await GetUserMovieDataAsync(movieId);
+        await UpsertUserMovieDataAsync(movieId, rating, existing != null ? Enum.Parse<WatchedStatus>(existing.WatchedStatus) : WatchedStatus.Unwatched);
     }
-    
+
     public async Task UpdateMovieWatchedStatusAsync(string movieId, WatchedStatus status)
     {
-        await _client
-            .From<SupabaseMovie>()
-            .Where(x => x.Id == movieId)
-            .Set(x => x.WatchedStatus, status.ToString())
-            .Update();
+        var existing = await GetUserMovieDataAsync(movieId);
+        await UpsertUserMovieDataAsync(movieId, existing?.Rating ?? 0, status);
     }
     
     public async Task<SupabaseProfile?> GetProfileByEmailAsync(string email)
@@ -181,14 +180,14 @@ public class SupabaseService
             .Update();
     }
     
-    public async Task<List<SupabaseProfile>> GetListMembersAsync(Dictionary<string, string> members)
+    public async Task<List<SupabaseProfile>> GetListMembersAsync(string ownerId, Dictionary<string, string> members)
     {
-        var memberIds = members.Keys.ToList();
-        if (memberIds.Count == 0) return new List<SupabaseProfile>();
+        var ids = new List<string> { ownerId };
+        ids.AddRange(members.Keys);
 
         var response = await _client
             .From<SupabaseProfile>()
-            .Filter("id", Postgrest.Constants.Operator.In, memberIds)
+            .Filter("id", Postgrest.Constants.Operator.In, ids)
             .Get();
 
         return response.Models;
@@ -196,19 +195,110 @@ public class SupabaseService
 
     public async Task RemoveMemberAsync(string listId, string userId)
     {
-        var list = await _client
-            .From<SupabaseList>()
-            .Where(x => x.Id == listId)
-            .Single();
+        await _client.Rpc("remove_list_member", new Dictionary<string, object>
+        {
+            { "list_id", listId },
+            { "member_id", userId }
+        });
+    }
+    
+    public async Task<string> GetUserEmailAsync(string userId)
+    {
+        try
+        {
+            var response = await _client
+                .From<SupabaseProfile>()
+                .Where(x => x.Id == userId)
+                .Single();
+            return response?.Email ?? userId;
+        }
+        catch
+        {
+            return userId;
+        }
+    }
+    
+    public async Task<string> GetDisplayNameAsync(string userId)
+    {
+        try
+        {
+            var response = await _client
+                .From<SupabaseProfile>()
+                .Where(x => x.Id == userId)
+                .Single();
+            return response?.DisplayName ?? response?.Email ?? userId;
+        }
+        catch
+        {
+            return userId;
+        }
+    }
+    
+    public async Task<SupabaseMovieUserData?> GetUserMovieDataAsync(string movieId)
+    {
+        try
+        {
+            var userId = _authService.CurrentUser?.Id ?? string.Empty;
+            return await _client
+                .From<SupabaseMovieUserData>()
+                .Where(x => x.MovieId == movieId && x.UserId == userId)
+                .Single();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-        if (list == null) return;
+    public async Task UpsertUserMovieDataAsync(string movieId, int rating, WatchedStatus watchedStatus)
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+    
+        try
+        {
+            var existing = await GetUserMovieDataAsync(movieId);
+            if (existing == null)
+            {
+                var data = new SupabaseMovieUserData
+                {
+                    MovieId = movieId,
+                    UserId = userId,
+                    Rating = rating,
+                    WatchedStatus = watchedStatus.ToString()
+                };
+                await _client
+                    .From<SupabaseMovieUserData>()
+                    .Insert(data);
+            }
+            else
+            {
+                await _client
+                    .From<SupabaseMovieUserData>()
+                    .Where(x => x.MovieId == movieId && x.UserId == userId)
+                    .Set(x => x.Rating, rating)
+                    .Set(x => x.WatchedStatus, watchedStatus.ToString())
+                    .Update();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"UpsertUserMovieData failed: {ex.Message}");
+        }
+    }
 
-        list.Members.Remove(userId);
-
-        await _client
-            .From<SupabaseList>()
-            .Where(x => x.Id == listId)
-            .Set(x => x.Members, list.Members)
-            .Update();
+    public async Task<List<SupabaseMovieUserData>> GetAllMemberMovieDataAsync(string movieId)
+    {
+        try
+        {
+            var response = await _client
+                .From<SupabaseMovieUserData>()
+                .Where(x => x.MovieId == movieId)
+                .Get();
+            return response.Models;
+        }
+        catch
+        {
+            return new List<SupabaseMovieUserData>();
+        }
     }
 }

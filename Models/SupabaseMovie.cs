@@ -22,14 +22,11 @@ public class SupabaseMovie : BaseModel
     [Column("poster_url")]
     public string PosterUrl { get; set; } = string.Empty;
 
-    [Column("rating")]
-    public int Rating { get; set; }
-
     [Column("category")]
     public string Category { get; set; } = string.Empty;
 
-    [Column("watched_status")]
-    public string WatchedStatus { get; set; } = "Unwatched";
+    [Column("release_date")]
+    public string ReleaseDate { get; set; } = string.Empty;
 
     [Column("added_by")]
     public string AddedBy { get; set; } = string.Empty;

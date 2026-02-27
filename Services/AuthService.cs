@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Supabase;
 using MovieRate.Models;
@@ -35,7 +36,11 @@ public class AuthService
     {
         try
         {
-            var response = await _client.Auth.SignUp(email, password);
+            var options = new Supabase.Gotrue.SignUpOptions
+            {
+                Data = new Dictionary<string, object> { { "display_name", displayName } }
+            };
+            var response = await _client.Auth.SignUp(email, password, options);
             return (response?.User != null, response?.User == null ? "Registration failed. Please try again." : string.Empty);
         }
         catch (Exception ex)

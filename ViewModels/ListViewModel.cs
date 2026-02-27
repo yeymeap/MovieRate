@@ -30,9 +30,12 @@ public partial class ListViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = string.Empty;
     [ObservableProperty] private string _sortBy = "Date Added";
     [ObservableProperty] private string _searchQuery = string.Empty;
+    [ObservableProperty] private ObservableCollection<SupabaseProfile> _members = new();
     
+    public bool IsOwner => _list.OwnerId == _authService.CurrentUser?.Id;
     public bool HasNoMovies => Movies.Count == 0;
     public string ListName => _list.Name;
+    public string OwnerId => _list.OwnerId;
 
     public ListViewModel(AuthService authService, SupabaseService supabaseService, MovieList list)
     {
@@ -51,8 +54,9 @@ public partial class ListViewModel : ViewModelBase
         return movie;
     }
     
-    private Movie AttachCallbacks(Movie movie)
+    private async Task<Movie> AttachCallbacksAsync(Movie movie)
     {
+        movie.AddedByEmail = await _supabaseService.GetDisplayNameAsync(movie.AddedBy);
         movie.RatingChangedCallback = async (rating) =>
         {
             await _supabaseService.UpdateMovieRatingAsync(movie.Id, rating);
@@ -67,11 +71,13 @@ public partial class ListViewModel : ViewModelBase
     private async Task LoadMoviesAsync()
     {
         IsLoading = true;
-        _allMovies = await _supabaseService.GetMoviesAsync(_list.Id);
-        _allMovies = _allMovies.Select(AttachCallbacks).ToList();
+        var movies = await _supabaseService.GetMoviesAsync(_list.Id);
+        var attached = await Task.WhenAll(movies.Select(AttachCallbacksAsync));
+        _allMovies = attached.ToList();
         ApplyFilterAndSort();
         Movies.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoMovies));
         OnPropertyChanged(nameof(HasNoMovies));
+        var memberProfiles = await _supabaseService.GetListMembersAsync(_list.OwnerId, _list.Members);        Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
         IsLoading = false;
     }
 
@@ -82,7 +88,9 @@ public partial class ListViewModel : ViewModelBase
         var movie = await _supabaseService.AddMovieAsync(_list.Id, NewMovieTitle, NewMovieCategory);
         if (movie != null)
         {
-            Movies.Add(AttachCallbacks(movie));
+            var attached = await AttachCallbacksAsync(movie);
+            _allMovies.Add(attached);
+            ApplyFilterAndSort();
             NewMovieTitle = string.Empty;
             NewMovieCategory = string.Empty;
         }
@@ -116,7 +124,7 @@ public partial class ListViewModel : ViewModelBase
     [RelayCommand]
     private async Task SelectTmdbMovieAsync(TmdbMovie tmdbMovie)
     {
-        foreach (var existing in Movies)
+        foreach (var existing in _allMovies)
         {
             if (existing.TmdbId == tmdbMovie.TmdbId)
             {
@@ -136,10 +144,13 @@ public partial class ListViewModel : ViewModelBase
             tmdbMovie.Title,
             tmdbMovie.Genres,
             tmdbMovie.TmdbId,
-            tmdbMovie.PosterUrl);
+            tmdbMovie.PosterUrl,
+            tmdbMovie.ReleaseDate);
         if (movie != null)
         {
-            Movies.Add(AttachCallbacks(movie));
+            var attached = await AttachCallbacksAsync(movie);
+            _allMovies.Add(attached);
+            ApplyFilterAndSort();
             NewMovieTitle = string.Empty;
             NewMovieCategory = string.Empty;
             SearchResults.Clear();
@@ -185,8 +196,7 @@ public partial class ListViewModel : ViewModelBase
     {
         movie.WatchedStatus = movie.WatchedStatus switch
         {
-            WatchedStatus.Unwatched => WatchedStatus.Watching,
-            WatchedStatus.Watching => WatchedStatus.Watched,
+            WatchedStatus.Unwatched => WatchedStatus.Watched,
             WatchedStatus.Watched => WatchedStatus.Unwatched,
             _ => WatchedStatus.Unwatched
         };
@@ -224,5 +234,25 @@ public partial class ListViewModel : ViewModelBase
     partial void OnSearchQueryChanged(string value)
     {
         ApplyFilterAndSort();
+    }
+    
+    [RelayCommand]
+    private async Task RemoveMemberAsync(SupabaseProfile member)
+    {
+        if (member.Id == _list.OwnerId) return;
+        await _supabaseService.RemoveMemberAsync(_list.Id, member.Id);
+        Members.Remove(member);
+        _list.Members.Remove(member.Id);
+    }
+    
+    public event Action? OnListLeft;
+    
+    [RelayCommand]
+    private async Task LeaveListAsync()
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+        Console.WriteLine($"Leaving list: userId={userId}, ownerId={_list.OwnerId}, IsOwner={IsOwner}");
+        await _supabaseService.RemoveMemberAsync(_list.Id, userId);
+        OnListLeft?.Invoke();
     }
 }

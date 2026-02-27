@@ -12,7 +12,7 @@ public partial class HomeViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
     private readonly SupabaseService _supabaseService;
-
+    
     [ObservableProperty] private ObservableCollection<MovieList> _lists = new();
     [ObservableProperty] private bool _isLoading = false;
     [ObservableProperty] private string _newListName = string.Empty;
@@ -71,7 +71,16 @@ public partial class HomeViewModel : ViewModelBase
     private void SelectList(MovieList list)
     {
         Console.WriteLine($"Selected list: {list.Name}");
-        SelectedList = new ListViewModel(_authService, _supabaseService, list);
+        var listVm = new ListViewModel(_authService, _supabaseService, list);
+        listVm.OnListLeft += HandleListLeft;
+        SelectedList = listVm;
+    }
+
+    private async void HandleListLeft()
+    {
+        SelectedList = null;
+        await Task.Delay(500);
+        await LoadListsAsync();
     }
     
     [RelayCommand]
