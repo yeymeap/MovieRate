@@ -77,7 +77,13 @@ public class StarRatingControl : UserControl
             container.PointerPressed += (s, e) =>
             {
                 var pos = e.GetPosition(container);
-                Rating = pos.X < 12 ? index * 2 - 1 : index * 2;
+                var newRating = pos.X < 12 ? index * 2 - 1 : index * 2;
+    
+                if (newRating == Rating)
+                    Rating = 0;
+                else
+                    Rating = newRating;
+        
                 RatingChanged?.Invoke(Rating);
             };
 

@@ -28,7 +28,7 @@ public partial class ListViewModel : ViewModelBase
     [ObservableProperty] private bool _isSearching = false;
     [ObservableProperty] private bool _showSearchResults = false;
     [ObservableProperty] private string _statusMessage = string.Empty;
-    [ObservableProperty] private string _sortBy = "Date Added";
+    [ObservableProperty] private string _sortBy = "Date Added (Newest)";
     [ObservableProperty] private string _searchQuery = string.Empty;
     [ObservableProperty] private ObservableCollection<SupabaseProfile> _members = new();
     
@@ -77,7 +77,10 @@ public partial class ListViewModel : ViewModelBase
         ApplyFilterAndSort();
         Movies.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoMovies));
         OnPropertyChanged(nameof(HasNoMovies));
-        var memberProfiles = await _supabaseService.GetListMembersAsync(_list.OwnerId, _list.Members);        Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
+        var memberProfiles = await _supabaseService.GetListMembersAsync(_list.OwnerId, _list.Members);
+        foreach (var profile in memberProfiles)
+            profile.IsOwner = profile.Id == _list.OwnerId;
+        Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
         IsLoading = false;
     }
 
@@ -204,7 +207,13 @@ public partial class ListViewModel : ViewModelBase
     
     public IEnumerable<string> SortOptions => new[]
     {
-        "Date Added", "Title", "Rating", "Watched Status"
+        "Date Added (Newest)",
+        "Date Added (Oldest)",
+        "Title",
+        "Rating",
+        "Release Date",
+        "Added By",
+        "Watched Status"
     };
 
     partial void OnSortByChanged(string value)
@@ -220,10 +229,14 @@ public partial class ListViewModel : ViewModelBase
 
         var sorted = SortBy switch
         {
+            "Date Added (Newest)" => filtered.OrderByDescending(m => m.AddedAt),
+            "Date Added (Oldest)" => filtered.OrderBy(m => m.AddedAt),
             "Title" => filtered.OrderBy(m => m.Title),
             "Rating" => filtered.OrderByDescending(m => m.Rating),
+            "Release Date" => filtered.OrderByDescending(m => m.ReleaseDate),
+            "Added By" => filtered.OrderBy(m => m.AddedByEmail),
             "Watched Status" => filtered.OrderBy(m => m.WatchedStatus),
-            _ => filtered.OrderBy(m => m.AddedAt)
+            _ => filtered.OrderByDescending(m => m.AddedAt)
         };
 
         Movies = new ObservableCollection<Movie>(sorted);

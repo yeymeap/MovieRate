@@ -50,6 +50,7 @@
                             Classes="Flat"
                             Opacity="0.5"
                             Padding="4"
+                            IsVisible="{Binding IsOwner}"
                             ToolTip.Tip="Share list"/>
                     <Button Grid.Column="2"
                             Content="✕"
