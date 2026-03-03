@@ -65,4 +65,28 @@ public class TmdbService
         }
         return movies;
     }
+    
+    public async Task<TmdbMovie?> GetMovieDetailsAsync(string tmdbId)
+    {
+        if (string.IsNullOrWhiteSpace(tmdbId)) return null;
+
+        var url = $"{BaseUrl}/movie/{tmdbId}?api_key={_apiKey}";
+        var response = await _httpClient.GetStringAsync(url);
+        var json = JsonDocument.Parse(response);
+
+        var posterPath = json.RootElement.TryGetProperty("poster_path", out var poster) ? poster.GetString() : null;
+        var genres = json.RootElement.TryGetProperty("genres", out var genreArray)
+            ? string.Join(", ", genreArray.EnumerateArray().Select(g => g.GetProperty("name").GetString()))
+            : string.Empty;
+
+        return new TmdbMovie
+        {
+            TmdbId = tmdbId,
+            Title = json.RootElement.GetProperty("title").GetString() ?? string.Empty,
+            PosterUrl = posterPath != null ? $"{ImageBaseUrl}{posterPath}" : string.Empty,
+            Overview = json.RootElement.TryGetProperty("overview", out var overview) ? overview.GetString() ?? string.Empty : string.Empty,
+            ReleaseDate = json.RootElement.TryGetProperty("release_date", out var date) ? date.GetString() ?? string.Empty : string.Empty,
+            Genres = genres
+        };
+    }
 }

@@ -301,4 +301,53 @@ public class SupabaseService
             return new List<SupabaseMovieUserData>();
         }
     }
+    public async Task<List<SupabaseMovieComment>> GetCommentsAsync(string movieId)
+    {
+        try
+        {
+            var response = await _client
+                .From<SupabaseMovieComment>()
+                .Where(x => x.MovieId == movieId)
+                .Get();
+            return response.Models;
+        }
+        catch
+        {
+            return new List<SupabaseMovieComment>();
+        }
+    }
+
+    public async Task<SupabaseMovieComment?> AddCommentAsync(string movieId, string content)
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+        var comment = new SupabaseMovieComment
+        {
+            MovieId = movieId,
+            UserId = userId,
+            Content = content
+        };
+
+        var response = await _client
+            .From<SupabaseMovieComment>()
+            .Insert(comment);
+
+        return response.Models[0];
+    }
+
+    public async Task UpdateCommentAsync(string commentId, string content)
+    {
+        await _client
+            .From<SupabaseMovieComment>()
+            .Where(x => x.Id == commentId)
+            .Set(x => x.Content, content)
+            .Update();
+    }
+
+    public async Task DeleteCommentAsync(string commentId)
+    {
+        await _client
+            .From<SupabaseMovieComment>()
+            .Where(x => x.Id == commentId)
+            .Delete();
+    }
 }

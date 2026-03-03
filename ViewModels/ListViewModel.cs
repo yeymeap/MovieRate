@@ -31,11 +31,15 @@ public partial class ListViewModel : ViewModelBase
     [ObservableProperty] private string _sortBy = "Date Added (Newest)";
     [ObservableProperty] private string _searchQuery = string.Empty;
     [ObservableProperty] private ObservableCollection<SupabaseProfile> _members = new();
+    [ObservableProperty] private MovieDetailViewModel? _selectedMovie;
+    [ObservableProperty] private ViewModelBase? _currentDetailView;
     
     public bool IsOwner => _list.OwnerId == _authService.CurrentUser?.Id;
     public bool HasNoMovies => Movies.Count == 0;
     public string ListName => _list.Name;
     public string OwnerId => _list.OwnerId;
+    public bool IsShowingDetail => CurrentDetailView != null;
+
 
     public ListViewModel(AuthService authService, SupabaseService supabaseService, MovieList list)
     {
@@ -79,7 +83,11 @@ public partial class ListViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasNoMovies));
         var memberProfiles = await _supabaseService.GetListMembersAsync(_list.OwnerId, _list.Members);
         foreach (var profile in memberProfiles)
+        {
             profile.IsOwner = profile.Id == _list.OwnerId;
+            profile.IsSelf = profile.Id == _authService.CurrentUser?.Id;
+            profile.ShowRemoveButton = IsOwner && !profile.IsOwner && !profile.IsSelf;
+        }
         Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
         IsLoading = false;
     }
@@ -267,5 +275,19 @@ public partial class ListViewModel : ViewModelBase
         Console.WriteLine($"Leaving list: userId={userId}, ownerId={_list.OwnerId}, IsOwner={IsOwner}");
         await _supabaseService.RemoveMemberAsync(_list.Id, userId);
         OnListLeft?.Invoke();
+    }
+    
+    public event Action<MovieDetailViewModel>? OnMovieSelected;
+    [RelayCommand]
+    private void SelectMovie(Movie movie)
+    {
+        var detailVm = new MovieDetailViewModel(_authService, _supabaseService, movie, IsOwner);
+        detailVm.OnBack += () =>
+        {
+            CurrentDetailView = null;
+            OnPropertyChanged(nameof(IsShowingDetail));
+        };
+        CurrentDetailView = detailVm;
+        OnPropertyChanged(nameof(IsShowingDetail));
     }
 }

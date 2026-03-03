@@ -1,0 +1,174 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MovieRate.ViewModels"
+             xmlns:models="using:MovieRate.Models"
+             xmlns:controls="using:MovieRate.Controls"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             x:Class="MovieRate.Views.MovieDetailView"
+             x:DataType="vm:MovieDetailViewModel">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Grid.Column="0"
+                Content="← Back"
+                Command="{Binding GoBackCommand}"
+                Classes="Flat"
+                Margin="0 0 16 0"/>
+        <TextBlock Grid.Column="1"
+                   Text="{Binding Title}"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+    <!-- Content -->
+    <ScrollViewer Grid.Row="1" Padding="24">
+      <StackPanel Spacing="24">
+
+        <ProgressBar IsIndeterminate="True"
+                     IsVisible="{Binding IsLoading}"
+                     Height="2"/>
+
+        <!-- Top section: poster + info -->
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding !IsLoading}">
+
+          <!-- Poster -->
+          <Image Grid.Column="0"
+                 Width="200"
+                 Height="300"
+                 Stretch="UniformToFill"
+                 asyncImageLoader:ImageLoader.Source="{Binding PosterUrl}"
+                 IsVisible="{Binding PosterUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                 VerticalAlignment="Top"/>
+
+          <!-- Info -->
+          <StackPanel Grid.Column="1" Spacing="12" Margin="24 0 0 0">
+            <TextBlock Text="{Binding Title}"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding Genres}"
+                       Opacity="0.6"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding Genres, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <TextBlock Text="{Binding ReleaseDate, StringFormat='Released: {0}'}"
+                       Opacity="0.6"
+                       IsVisible="{Binding ReleaseDate, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <TextBlock Text="{Binding AddedByEmail, StringFormat='Added by: {0}'}"
+                       Opacity="0.6"/>
+            <TextBlock Text="{Binding Overview}"
+                       TextWrapping="Wrap"
+                       Opacity="0.8"
+                       IsVisible="{Binding Overview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <!-- Your rating -->
+            <StackPanel Spacing="4">
+              <TextBlock Text="Your Rating" Opacity="0.5" FontSize="12"/>
+              <controls:StarRatingControl Rating="{Binding Rating, Mode=TwoWay}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+              <TextBlock Text="Your Status" Opacity="0.5" FontSize="12"/>
+              <Button Content="{Binding WatchedStatus}"
+                      Command="{Binding ToggleWatchedStatusCommand}"
+                      Classes="Flat"
+                      Padding="0"
+                      Opacity="0.7"/>
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <!-- Member data -->
+        <StackPanel Spacing="8" IsVisible="{Binding !IsLoading}">
+          <TextBlock Text="RATINGS BY MEMBERS"
+                     FontSize="11"
+                     Opacity="0.5"/>
+          <ItemsControl ItemsSource="{Binding MemberData}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:MemberMovieData">
+                <Border Background="#1e1e1e"
+                        CornerRadius="8"
+                        Padding="16"
+                        Margin="0 4">
+                  <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding DisplayName}"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <controls:StarRatingControl Grid.Column="1"
+                                                Rating="{Binding Rating}"
+                                                IsReadOnly="True"
+                                                Margin="8 0"/>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding WatchedStatus}"
+                               Opacity="0.6"
+                               VerticalAlignment="Center"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- Comments -->
+        <StackPanel Spacing="8" IsVisible="{Binding !IsLoading}">
+          <TextBlock Text="COMMENTS"
+                     FontSize="11"
+                     Opacity="0.5"/>
+
+          <ItemsControl ItemsSource="{Binding Comments}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="models:MovieComment">
+                <Border Background="#1e1e1e"
+                        CornerRadius="8"
+                        Padding="16"
+                        Margin="0 4">
+                  <Grid RowDefinitions="Auto,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                      <TextBlock Grid.Column="0"
+                                 Text="{Binding DisplayName}"
+                                 FontWeight="SemiBold"
+                                 Opacity="0.7"
+                                 FontSize="12"/>
+                      <Button Grid.Column="1"
+                              Content="✕"
+                              Command="{Binding $parent[UserControl].((vm:MovieDetailViewModel)DataContext).DeleteCommentCommand}"
+                              CommandParameter="{Binding}"
+                              Classes="Flat"
+                              Opacity="0.5"
+                              FontSize="10"
+                              Padding="2"
+                              IsVisible="{Binding CanDelete}"/>
+                    </Grid>
+                    <TextBlock Grid.Row="1"
+                               Text="{Binding Content}"
+                               TextWrapping="Wrap"
+                               Margin="0 4 0 0"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Add comment -->
+          <Grid ColumnDefinitions="*,Auto" Margin="0 8 0 0">
+            <TextBox Grid.Column="0"
+                     Watermark="Add a comment..."
+                     Text="{Binding NewComment}"
+                     Margin="0 0 8 0"/>
+            <Button Grid.Column="1"
+                    Content="Post"
+                    Command="{Binding AddCommentCommand}"/>
+          </Grid>
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+
+</UserControl>

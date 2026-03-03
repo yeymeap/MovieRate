@@ -13,4 +13,6 @@ public class SupabaseProfile : BaseModel
     [Column("display_name")]
     public string DisplayName { get; set; } = string.Empty;
     public bool IsOwner { get; set; } = false;
+    public bool IsSelf { get; set; } = false;
+    public bool ShowRemoveButton { get; set; } = false;
 }
