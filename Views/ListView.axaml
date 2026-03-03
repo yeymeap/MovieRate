@@ -18,11 +18,33 @@
 <Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
   <Grid RowDefinitions="Auto,Auto,Auto">
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
-      <TextBlock Grid.Column="0"
-                 Text="{Binding ListName}"
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="{Binding ListName}"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding !IsEditingName}"/>
+        <TextBox Text="{Binding EditingName}"
                  FontSize="22"
                  FontWeight="Bold"
-                 VerticalAlignment="Center"/>
+                 IsVisible="{Binding IsEditingName}"
+                 Width="200"/>
+        <Button Content="✎"
+                Command="{Binding StartRenameCommand}"
+                Classes="Flat"
+                Opacity="0.5"
+                IsVisible="{Binding IsOwner}"
+                ToolTip.Tip="Rename list"/>
+        <Button Content="✓"
+                Command="{Binding ConfirmRenameCommand}"
+                Classes="Flat"
+                IsVisible="{Binding IsEditingName}"/>
+        <Button Content="✕"
+                Command="{Binding CancelRenameCommand}"
+                Classes="Flat"
+                Opacity="0.5"
+                IsVisible="{Binding IsEditingName}"/>
+      </StackPanel>
       <TextBox Grid.Column="1"
                Watermark="Search in list..."
                Text="{Binding SearchQuery}"

@@ -33,6 +33,9 @@ public partial class ListViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<SupabaseProfile> _members = new();
     [ObservableProperty] private MovieDetailViewModel? _selectedMovie;
     [ObservableProperty] private ViewModelBase? _currentDetailView;
+    [ObservableProperty] private bool _isEditingName = false;
+    [ObservableProperty] private string _editingName = string.Empty;
+
     
     public bool IsOwner => _list.OwnerId == _authService.CurrentUser?.Id;
     public bool HasNoMovies => Movies.Count == 0;
@@ -40,7 +43,11 @@ public partial class ListViewModel : ViewModelBase
     public string OwnerId => _list.OwnerId;
     public bool IsShowingDetail => CurrentDetailView != null;
     public bool ShowEmptyMessage => HasNoMovies && !IsLoading;
-
+    
+    public event Action? OnListLeft;
+    public event Action<MovieDetailViewModel>? OnMovieSelected;
+    public event Action<string>? OnListRenamed;
+    
 
     public ListViewModel(AuthService authService, SupabaseService supabaseService, MovieList list)
     {
@@ -282,7 +289,6 @@ public partial class ListViewModel : ViewModelBase
         _list.Members.Remove(member.Id);
     }
     
-    public event Action? OnListLeft;
     
     [RelayCommand]
     private async Task LeaveListAsync()
@@ -297,7 +303,6 @@ public partial class ListViewModel : ViewModelBase
         OnListLeft?.Invoke();
     }
     
-    public event Action<MovieDetailViewModel>? OnMovieSelected;
     [RelayCommand]
     private void SelectMovie(Movie movie)
     {
@@ -315,5 +320,29 @@ public partial class ListViewModel : ViewModelBase
     private async Task RefreshAsync()
     {
         await LoadMoviesAsync();
+    }
+    
+    [RelayCommand]
+    private void StartRename()
+    {
+        EditingName = _list.Name;
+        IsEditingName = true;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmRenameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(EditingName)) return;
+        await _supabaseService.UpdateListNameAsync(_list.Id, EditingName);
+        _list.Name = EditingName;
+        OnPropertyChanged(nameof(ListName));
+        IsEditingName = false;
+        OnListRenamed?.Invoke(EditingName);
+    }
+
+    [RelayCommand]
+    private void CancelRename()
+    {
+        IsEditingName = false;
     }
 }

@@ -12,7 +12,7 @@ public partial class HomeViewModel : ViewModelBase
 {
     private readonly AuthService _authService;
     private readonly SupabaseService _supabaseService;
-    
+
     [ObservableProperty] private ObservableCollection<MovieList> _lists = new();
     [ObservableProperty] private bool _isLoading = false;
     [ObservableProperty] private string _newListName = string.Empty;
@@ -73,7 +73,7 @@ public partial class HomeViewModel : ViewModelBase
         await _authService.LogoutAsync();
         OnLogout?.Invoke();
     }
-    
+
     [ObservableProperty] private ListViewModel? _selectedList;
 
     [RelayCommand]
@@ -82,6 +82,16 @@ public partial class HomeViewModel : ViewModelBase
         Console.WriteLine($"Selected list: {list.Name}");
         var listVm = new ListViewModel(_authService, _supabaseService, list);
         listVm.OnListLeft += HandleListLeft;
+        listVm.OnListRenamed += (newName) =>
+        {
+            list.Name = newName;
+            var index = Lists.IndexOf(list);
+            if (index >= 0)
+            {
+                Lists.RemoveAt(index);
+                Lists.Insert(index, list);
+            }
+        };
         SelectedList = listVm;
     }
 
@@ -91,7 +101,7 @@ public partial class HomeViewModel : ViewModelBase
         await Task.Delay(500);
         await LoadListsAsync();
     }
-    
+
     [RelayCommand]
     private void StartShare(MovieList list)
     {
@@ -132,7 +142,7 @@ public partial class HomeViewModel : ViewModelBase
         ListToShare = null;
         ShareMessage = string.Empty;
     }
-    
+
     private async Task LoadUserNameAsync()
     {
         var userId = _authService.CurrentUser?.Id ?? string.Empty;

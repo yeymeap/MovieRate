@@ -350,4 +350,13 @@ public class SupabaseService
             .Where(x => x.Id == commentId)
             .Delete();
     }
+    
+    public async Task UpdateListNameAsync(string listId, string name)
+    {
+        await _client
+            .From<SupabaseList>()
+            .Where(x => x.Id == listId)
+            .Set(x => x.Name, name)
+            .Update();
+    }
 }
