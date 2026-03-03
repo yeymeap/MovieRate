@@ -86,7 +86,9 @@ public class TmdbService
             PosterUrl = posterPath != null ? $"{ImageBaseUrl}{posterPath}" : string.Empty,
             Overview = json.RootElement.TryGetProperty("overview", out var overview) ? overview.GetString() ?? string.Empty : string.Empty,
             ReleaseDate = json.RootElement.TryGetProperty("release_date", out var date) ? date.GetString() ?? string.Empty : string.Empty,
-            Genres = genres
+            Genres = genres,
+            Runtime = json.RootElement.TryGetProperty("runtime", out var runtime) ? runtime.GetInt32() : 0
+
         };
     }
 }

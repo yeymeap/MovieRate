@@ -33,4 +33,6 @@ public class SupabaseMovie : BaseModel
 
     [Column("added_at")]
     public DateTimeOffset AddedAt { get; set; }
+    [Column("runtime")]
+    public int Runtime { get; set; }
 }

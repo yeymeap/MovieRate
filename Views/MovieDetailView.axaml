@@ -26,7 +26,7 @@
     </Border>
 
     <!-- Content -->
-    <ScrollViewer Grid.Row="1" Padding="24">
+    <ScrollViewer Grid.Row="1" Padding="24 24 24 -48" Margin="0  0 0 48">
       <StackPanel Spacing="24">
 
         <ProgressBar IsIndeterminate="True"
@@ -58,6 +58,9 @@
             <TextBlock Text="{Binding ReleaseDate, StringFormat='Released: {0}'}"
                        Opacity="0.6"
                        IsVisible="{Binding ReleaseDate, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <TextBlock Text="{Binding Movie.RuntimeDisplay}"
+                       Opacity="0.6"
+                       IsVisible="{Binding Movie.RuntimeDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <TextBlock Text="{Binding AddedByEmail, StringFormat='Added by: {0}'}"
                        Opacity="0.6"/>
             <TextBlock Text="{Binding Overview}"

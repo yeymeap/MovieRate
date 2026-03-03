@@ -168,13 +168,16 @@ public partial class ListViewModel : ViewModelBase
         }
 
         ShowSearchResults = false;
+        var details = await _tmdbService.GetMovieDetailsAsync(tmdbMovie.TmdbId);
+
         var movie = await _supabaseService.AddMovieAsync(
             _list.Id,
-            tmdbMovie.Title,
-            tmdbMovie.Genres,
+            details?.Title ?? tmdbMovie.Title,
+            details?.Genres ?? tmdbMovie.Genres,
             tmdbMovie.TmdbId,
-            tmdbMovie.PosterUrl,
-            tmdbMovie.ReleaseDate);
+            details?.PosterUrl ?? tmdbMovie.PosterUrl,
+            details?.ReleaseDate ?? tmdbMovie.ReleaseDate,
+            details?.Runtime ?? 0);
         if (movie != null)
         {
             var attached = await AttachCallbacksAsync(movie);

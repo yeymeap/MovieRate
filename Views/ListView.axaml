@@ -10,108 +10,109 @@
 
   <Panel>
 
-    <!-- List View -->
-    <Grid RowDefinitions="Auto,*,Auto"
-          IsVisible="{Binding !IsShowingDetail}">
+    <Grid>
+      <!-- List View -->
+      <Grid RowDefinitions="Auto,*,Auto"
+            IsVisible="{Binding !IsShowingDetail}">
 
       <!-- Header -->
-<Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
-  <Grid RowDefinitions="Auto,Auto,Auto">
-    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
-      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-        <TextBlock Text="{Binding ListName}"
-                   FontSize="22"
-                   FontWeight="Bold"
-                   VerticalAlignment="Center"
-                   IsVisible="{Binding !IsEditingName}"/>
-        <TextBox Text="{Binding EditingName}"
-                 FontSize="22"
-                 FontWeight="Bold"
-                 IsVisible="{Binding IsEditingName}"
-                 Width="200"/>
-        <Button Content="✎"
-                Command="{Binding StartRenameCommand}"
-                Classes="Flat"
-                Opacity="0.5"
-                IsVisible="{Binding IsOwner}"
-                ToolTip.Tip="Rename list"/>
-        <Button Content="✓"
-                Command="{Binding ConfirmRenameCommand}"
-                Classes="Flat"
-                IsVisible="{Binding IsEditingName}"/>
-        <Button Content="✕"
-                Command="{Binding CancelRenameCommand}"
-                Classes="Flat"
-                Opacity="0.5"
-                IsVisible="{Binding IsEditingName}"/>
-      </StackPanel>
-      <TextBox Grid.Column="1"
-               Watermark="Search in list..."
-               Text="{Binding SearchQuery}"
-               Width="200"
-               Margin="0 0 16 0"
-               VerticalAlignment="Center"/>
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-        <TextBlock Text="Sort by" Opacity="0.5" VerticalAlignment="Center"/>
-        <ComboBox ItemsSource="{Binding SortOptions}"
-                  SelectedItem="{Binding SortBy}"
-                  Width="140"/>
-        <Button Content="↻"
-                Command="{Binding RefreshCommand}"
-                Classes="Flat"
-                FontSize="18"
-                Opacity="0.7"
-                ToolTip.Tip="Refresh"/>
-      </StackPanel>
-    </Grid>
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0 12 0 0">
-      <TextBlock Text="Members:" Opacity="0.5" VerticalAlignment="Center" FontSize="12"/>
-      <ItemsControl ItemsSource="{Binding Members}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" Spacing="4"/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate DataType="models:SupabaseProfile">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <Border Background="#2a2a2a" CornerRadius="4" Padding="6 2">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                  <TextBlock Text="★"
-                             FontSize="10"
-                             Foreground="#FFD700"
-                             VerticalAlignment="Center"
-                             IsVisible="{Binding IsOwner}"/>
-                  <TextBlock Text="{Binding DisplayName}"
-                             FontSize="12"
-                             VerticalAlignment="Center"/>
-                </StackPanel>
-              </Border>
-              <Button Content="✕"
-                      Command="{Binding $parent[UserControl].((vm:ListViewModel)DataContext).RemoveMemberCommand}"
-                      CommandParameter="{Binding}"
+      <Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
+        <Grid RowDefinitions="Auto,Auto,Auto">
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="{Binding ListName}"
+                         FontSize="22"
+                         FontWeight="Bold"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding !IsEditingName}"/>
+              <TextBox Text="{Binding EditingName}"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       IsVisible="{Binding IsEditingName}"
+                       Width="200"/>
+              <Button Content="✎"
+                      Command="{Binding StartRenameCommand}"
                       Classes="Flat"
-                      Padding="2"
-                      FontSize="10"
                       Opacity="0.5"
-                      IsVisible="{Binding ShowRemoveButton}"
-                      VerticalAlignment="Center"/>
+                      IsVisible="{Binding IsOwner}"
+                      ToolTip.Tip="Rename list"/>
+              <Button Content="✓"
+                      Command="{Binding ConfirmRenameCommand}"
+                      Classes="Flat"
+                      IsVisible="{Binding IsEditingName}"/>
+              <Button Content="✕"
+                      Command="{Binding CancelRenameCommand}"
+                      Classes="Flat"
+                      Opacity="0.5"
+                      IsVisible="{Binding IsEditingName}"/>
             </StackPanel>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <Button Content="Leave list"
-              Command="{Binding LeaveListCommand}"
-              Classes="Flat"
-              FontSize="12"
-              Opacity="0.5"
-              IsVisible="{Binding !IsOwner}"/>
-    </StackPanel>
-  </Grid>
-</Border>
+            <TextBox Grid.Column="1"
+                     Watermark="Search in list..."
+                     Text="{Binding SearchQuery}"
+                     Width="200"
+                     Margin="0 0 16 0"
+                     VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="Sort by" Opacity="0.5" VerticalAlignment="Center"/>
+              <ComboBox ItemsSource="{Binding SortOptions}"
+                        SelectedItem="{Binding SortBy}"
+                        Width="140"/>
+              <Button Content="↻"
+                      Command="{Binding RefreshCommand}"
+                      Classes="Flat"
+                      FontSize="18"
+                      Opacity="0.7"
+                      ToolTip.Tip="Refresh"/>
+            </StackPanel>
+          </Grid>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0 12 0 0">
+            <TextBlock Text="Members:" Opacity="0.5" VerticalAlignment="Center" FontSize="12"/>
+            <ItemsControl ItemsSource="{Binding Members}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="4"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:SupabaseProfile">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Background="#2a2a2a" CornerRadius="4" Padding="6 2">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="★"
+                                   FontSize="10"
+                                   Foreground="#FFD700"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding IsOwner}"/>
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Border>
+                    <Button Content="✕"
+                            Command="{Binding $parent[UserControl].((vm:ListViewModel)DataContext).RemoveMemberCommand}"
+                            CommandParameter="{Binding}"
+                            Classes="Flat"
+                            Padding="2"
+                            FontSize="10"
+                            Opacity="0.5"
+                            IsVisible="{Binding ShowRemoveButton}"
+                            VerticalAlignment="Center"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Content="Leave list"
+                    Command="{Binding LeaveListCommand}"
+                    Classes="Flat"
+                    FontSize="12"
+                    Opacity="0.5"
+                    IsVisible="{Binding !IsOwner}"/>
+          </StackPanel>
+        </Grid>
+      </Border>
 
       <!-- Movies -->
-      <ScrollViewer Grid.Row="1" Padding="24">
+      <ScrollViewer Grid.Row="1" Padding="24 24 24 -48" Margin="0 0 0 4">
         <StackPanel Spacing="8">
           <Border Background="#3a2a2a"
                   CornerRadius="8"
@@ -158,6 +159,10 @@
                                    Opacity="0.5"
                                    FontSize="12"
                                    IsVisible="{Binding ReleaseDate, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBlock Text="{Binding RuntimeDisplay}"
+                                   Opacity="0.5"
+                                   FontSize="12"
+                                   IsVisible="{Binding RuntimeDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                         <TextBlock Text="{Binding Category}"
                                    Opacity="0.5"
                                    FontSize="12"
@@ -259,6 +264,7 @@
         </DataTemplate>
       </ContentControl.DataTemplates>
     </ContentControl>
+    </Grid>
 
   </Panel>
 

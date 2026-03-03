@@ -29,7 +29,8 @@ public partial class MovieDetailViewModel : ViewModelBase
     public string PosterUrl => _movie.PosterUrl;
     public string ReleaseDate => _movie.ReleaseDate;
     public string AddedByEmail => _movie.AddedByEmail;
-
+    public Movie Movie => _movie;
+    
     public event Action? OnBack;
 
     public MovieDetailViewModel(AuthService authService, SupabaseService supabaseService, Movie movie, bool isListOwner)

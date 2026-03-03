@@ -15,6 +15,9 @@ public partial class Movie : ObservableObject
     [ObservableProperty] private string _addedBy = string.Empty;
     [ObservableProperty] private string _addedByEmail = string.Empty;
     [ObservableProperty] private DateTimeOffset _addedAt = DateTimeOffset.UtcNow;
+    [ObservableProperty] private int _runtime = 0;
+    
+    public string RuntimeDisplay => Runtime > 0 ? $"{Runtime / 60}h {Runtime % 60}m" : string.Empty;
 
     // Current user's personal data
     [ObservableProperty] private int _rating = 0;
@@ -25,6 +28,7 @@ public partial class Movie : ObservableObject
 
     public Func<int, System.Threading.Tasks.Task>? RatingChangedCallback { get; set; }
     public Func<WatchedStatus, System.Threading.Tasks.Task>? WatchedStatusChangedCallback { get; set; }
+    
 
     partial void OnRatingChanged(int value)
     {

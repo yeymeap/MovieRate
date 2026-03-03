@@ -94,13 +94,14 @@ public class SupabaseService
                 ReleaseDate = item.ReleaseDate,
                 AddedBy = item.AddedBy,
                 Rating = userData?.Rating ?? 0,
-                WatchedStatus = userData != null ? Enum.Parse<WatchedStatus>(userData.WatchedStatus) : WatchedStatus.Unwatched
+                WatchedStatus = userData != null ? Enum.Parse<WatchedStatus>(userData.WatchedStatus) : WatchedStatus.Unwatched,
+                Runtime = item.Runtime
             });
         }
         return movies;
     }
     
-    public async Task<Movie?> AddMovieAsync(string listId, string title, string category, string tmdbId = "", string posterUrl = "", string releaseDate = "")
+    public async Task<Movie?> AddMovieAsync(string listId, string title, string category, string tmdbId = "", string posterUrl = "", string releaseDate = "", int runtime = 0)
     {
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
         var newMovie = new SupabaseMovie
@@ -111,7 +112,8 @@ public class SupabaseService
             TmdbId = tmdbId,
             PosterUrl = posterUrl,
             ReleaseDate = releaseDate,
-            AddedBy = userId
+            AddedBy = userId,
+            Runtime = runtime
         };
 
         var response = await _client
@@ -127,6 +129,7 @@ public class SupabaseService
             TmdbId = item.TmdbId,
             PosterUrl = item.PosterUrl,
             ReleaseDate = item.ReleaseDate,
+            Runtime = item.Runtime,
             AddedBy = item.AddedBy
         };
     }

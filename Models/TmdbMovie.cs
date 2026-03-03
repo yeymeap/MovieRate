@@ -8,4 +8,5 @@ public class TmdbMovie
     public string Overview { get; set; } = string.Empty;
     public string ReleaseDate { get; set; } = string.Empty;
     public string Genres { get; set; } = string.Empty;
+    public int Runtime { get; set; } = 0;
 }
