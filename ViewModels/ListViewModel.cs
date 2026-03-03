@@ -110,8 +110,14 @@ public partial class ListViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteMovieAsync(Movie movie)
     {
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete Movie",
+            $"Are you sure you want to remove \"{movie.Title}\" from this list?");
+        if (!confirmed) return;
+
         await _supabaseService.DeleteMovieAsync(movie.Id);
-        Movies.Remove(movie);
+        _allMovies.Remove(movie);
+        ApplyFilterAndSort();
     }
 
     [RelayCommand]
@@ -261,6 +267,11 @@ public partial class ListViewModel : ViewModelBase
     private async Task RemoveMemberAsync(SupabaseProfile member)
     {
         if (member.Id == _list.OwnerId) return;
+        var confirmed = await DialogService.ConfirmAsync(
+            "Remove Member",
+            $"Are you sure you want to remove {member.DisplayName} from this list?");
+        if (!confirmed) return;
+
         await _supabaseService.RemoveMemberAsync(_list.Id, member.Id);
         Members.Remove(member);
         _list.Members.Remove(member.Id);
@@ -271,8 +282,12 @@ public partial class ListViewModel : ViewModelBase
     [RelayCommand]
     private async Task LeaveListAsync()
     {
+        var confirmed = await DialogService.ConfirmAsync(
+            "Leave List",
+            $"Are you sure you want to leave \"{_list.Name}\"?");
+        if (!confirmed) return;
+
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
-        Console.WriteLine($"Leaving list: userId={userId}, ownerId={_list.OwnerId}, IsOwner={IsOwner}");
         await _supabaseService.RemoveMemberAsync(_list.Id, userId);
         OnListLeft?.Invoke();
     }

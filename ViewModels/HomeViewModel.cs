@@ -54,8 +54,15 @@ public partial class HomeViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteListAsync(MovieList list)
     {
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete List",
+            $"Are you sure you want to delete \"{list.Name}\"? This cannot be undone.");
+        if (!confirmed) return;
+
         await _supabaseService.DeleteListAsync(list.Id);
         Lists.Remove(list);
+        if (SelectedList?.ListName == list.Name)
+            SelectedList = null;
     }
 
     [RelayCommand]
