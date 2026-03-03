@@ -39,6 +39,7 @@ public partial class ListViewModel : ViewModelBase
     public string ListName => _list.Name;
     public string OwnerId => _list.OwnerId;
     public bool IsShowingDetail => CurrentDetailView != null;
+    public bool ShowEmptyMessage => HasNoMovies && !IsLoading;
 
 
     public ListViewModel(AuthService authService, SupabaseService supabaseService, MovieList list)
@@ -79,8 +80,11 @@ public partial class ListViewModel : ViewModelBase
         var attached = await Task.WhenAll(movies.Select(AttachCallbacksAsync));
         _allMovies = attached.ToList();
         ApplyFilterAndSort();
-        Movies.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoMovies));
-        OnPropertyChanged(nameof(HasNoMovies));
+        Movies.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasNoMovies));
+            OnPropertyChanged(nameof(ShowEmptyMessage));
+        };
         var memberProfiles = await _supabaseService.GetListMembersAsync(_list.OwnerId, _list.Members);
         foreach (var profile in memberProfiles)
         {
@@ -90,6 +94,7 @@ public partial class ListViewModel : ViewModelBase
         }
         Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
         IsLoading = false;
+        OnPropertyChanged(nameof(ShowEmptyMessage));
     }
 
     [RelayCommand]
@@ -304,5 +309,11 @@ public partial class ListViewModel : ViewModelBase
         };
         CurrentDetailView = detailVm;
         OnPropertyChanged(nameof(IsShowingDetail));
+    }
+    
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        await LoadMoviesAsync();
     }
 }

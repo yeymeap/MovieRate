@@ -15,92 +15,104 @@
           IsVisible="{Binding !IsShowingDetail}">
 
       <!-- Header -->
-      <Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
-        <Grid RowDefinitions="Auto,Auto">
-          <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
-            <TextBlock Grid.Column="0"
-                       Text="{Binding ListName}"
-                       FontSize="22"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"/>
-            <TextBox Grid.Column="1"
-                     Watermark="Search in list..."
-                     Text="{Binding SearchQuery}"
-                     Width="200"
-                     Margin="0 0 16 0"
-                     VerticalAlignment="Center"/>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <TextBlock Text="Sort by" Opacity="0.5" VerticalAlignment="Center"/>
-              <ComboBox ItemsSource="{Binding SortOptions}"
-                        SelectedItem="{Binding SortBy}"
-                        Width="140"/>
+<Border Grid.Row="0" Padding="24 16" BorderThickness="0 0 0 1" BorderBrush="#333">
+  <Grid RowDefinitions="Auto,Auto,Auto">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
+      <TextBlock Grid.Column="0"
+                 Text="{Binding ListName}"
+                 FontSize="22"
+                 FontWeight="Bold"
+                 VerticalAlignment="Center"/>
+      <TextBox Grid.Column="1"
+               Watermark="Search in list..."
+               Text="{Binding SearchQuery}"
+               Width="200"
+               Margin="0 0 16 0"
+               VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="Sort by" Opacity="0.5" VerticalAlignment="Center"/>
+        <ComboBox ItemsSource="{Binding SortOptions}"
+                  SelectedItem="{Binding SortBy}"
+                  Width="140"/>
+        <Button Content="↻"
+                Command="{Binding RefreshCommand}"
+                Classes="Flat"
+                FontSize="18"
+                Opacity="0.7"
+                ToolTip.Tip="Refresh"/>
+      </StackPanel>
+    </Grid>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0 12 0 0">
+      <TextBlock Text="Members:" Opacity="0.5" VerticalAlignment="Center" FontSize="12"/>
+      <ItemsControl ItemsSource="{Binding Members}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="4"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="models:SupabaseProfile">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Border Background="#2a2a2a" CornerRadius="4" Padding="6 2">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <TextBlock Text="★"
+                             FontSize="10"
+                             Foreground="#FFD700"
+                             VerticalAlignment="Center"
+                             IsVisible="{Binding IsOwner}"/>
+                  <TextBlock Text="{Binding DisplayName}"
+                             FontSize="12"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+              </Border>
+              <Button Content="✕"
+                      Command="{Binding $parent[UserControl].((vm:ListViewModel)DataContext).RemoveMemberCommand}"
+                      CommandParameter="{Binding}"
+                      Classes="Flat"
+                      Padding="2"
+                      FontSize="10"
+                      Opacity="0.5"
+                      IsVisible="{Binding ShowRemoveButton}"
+                      VerticalAlignment="Center"/>
             </StackPanel>
-          </Grid>
-          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0 12 0 0">
-            <TextBlock Text="Members:" Opacity="0.5" VerticalAlignment="Center" FontSize="12"/>
-            <ItemsControl ItemsSource="{Binding Members}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal" Spacing="4"/>
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="models:SupabaseProfile">
-                  <StackPanel Orientation="Horizontal" Spacing="4">
-                    <Border Background="#2a2a2a" CornerRadius="4" Padding="6 2">
-                      <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="★"
-                                   FontSize="10"
-                                   Foreground="#FFD700"
-                                   VerticalAlignment="Center"
-                                   IsVisible="{Binding IsOwner}"/>
-                        <TextBlock Text="{Binding DisplayName}"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"/>
-                      </StackPanel>
-                    </Border>
-                    <Button Content="✕"
-                            Command="{Binding $parent[UserControl].((vm:ListViewModel)DataContext).RemoveMemberCommand}"
-                            CommandParameter="{Binding}"
-                            Classes="Flat"
-                            Padding="2"
-                            FontSize="10"
-                            Opacity="0.5"
-                            IsVisible="{Binding ShowRemoveButton}"
-                            VerticalAlignment="Center"/>
-                  </StackPanel>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <Button Content="Leave list"
-                    Command="{Binding LeaveListCommand}"
-                    Classes="Flat"
-                    FontSize="12"
-                    Opacity="0.5"
-                    IsVisible="{Binding !IsOwner}"/>
-          </StackPanel>
-        </Grid>
-      </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Button Content="Leave list"
+              Command="{Binding LeaveListCommand}"
+              Classes="Flat"
+              FontSize="12"
+              Opacity="0.5"
+              IsVisible="{Binding !IsOwner}"/>
+    </StackPanel>
+  </Grid>
+</Border>
 
       <!-- Movies -->
       <ScrollViewer Grid.Row="1" Padding="24">
         <StackPanel Spacing="8">
-          <ProgressBar IsIndeterminate="True"
-                       IsVisible="{Binding IsLoading}"
-                       Height="2"
-                       Margin="0 0 0 8"/>
           <Border Background="#3a2a2a"
                   CornerRadius="8"
                   Padding="12 8"
                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <TextBlock Text="{Binding StatusMessage}" Foreground="#ff6b6b"/>
           </Border>
+          <ProgressBar IsIndeterminate="True"
+                       IsVisible="{Binding IsLoading}"
+                       Height="2"
+                       Margin="0 0 0 8"/>
+          <TextBlock Text="Loading movies..."
+                     Opacity="0.4"
+                     FontSize="14"
+                     HorizontalAlignment="Center"
+                     Margin="0 16"
+                     IsVisible="{Binding IsLoading}"/>
           <TextBlock Text="No movies yet. Add one!"
                      Opacity="0.4"
                      FontSize="16"
                      HorizontalAlignment="Center"
                      Margin="0 32"
-                     IsVisible="{Binding HasNoMovies}"/>
+                     IsVisible="{Binding ShowEmptyMessage}"/>
           <ItemsControl ItemsSource="{Binding Movies}">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="models:Movie">

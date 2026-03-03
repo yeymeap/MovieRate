@@ -5,7 +5,10 @@
         x:Class="MovieRate.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Movie Rate"
-        Width="1000" Height="700">
+        Icon="avares://MovieRate/Assets/app_icon.ico"
+        Width="1000" Height="700"
+        MinWidth="800" MinHeight="600">
+        
 
     <ContentControl Content="{Binding CurrentView}">
         <ContentControl.DataTemplates>
