@@ -19,6 +19,7 @@ public partial class HomeViewModel : ViewModelBase
     [ObservableProperty] private string _shareEmail = string.Empty;
     [ObservableProperty] private string _shareMessage = string.Empty;
     [ObservableProperty] private MovieList? _listToShare = null;
+    [ObservableProperty] private string _currentUserName = string.Empty;
 
     public string WelcomeMessage => $"Welcome, {_authService.CurrentUser?.Email ?? "user"}!";
 
@@ -29,6 +30,7 @@ public partial class HomeViewModel : ViewModelBase
         _authService = authService;
         _supabaseService = new SupabaseService(authService);
         _ = LoadListsAsync();
+        _ = LoadUserNameAsync();
     }
 
     private async Task LoadListsAsync()
@@ -129,5 +131,11 @@ public partial class HomeViewModel : ViewModelBase
         await Task.Delay(2000);
         ListToShare = null;
         ShareMessage = string.Empty;
+    }
+    
+    private async Task LoadUserNameAsync()
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+        CurrentUserName = await _supabaseService.GetDisplayNameAsync(userId);
     }
 }
