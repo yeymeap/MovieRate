@@ -61,7 +61,7 @@ public partial class ListViewModel : ViewModelBase
     {
         movie.RatingChangedCallback = async (rating) =>
         {
-            await _supabaseService.UpdateMovieRatingAsync(movie.Id, rating);
+            await _supabaseService.UpdateMovieRatingAsync(movie.Id, movie.TmdbId, rating);
         };
         return movie;
     }
@@ -71,11 +71,11 @@ public partial class ListViewModel : ViewModelBase
         movie.AddedByEmail = await _supabaseService.GetDisplayNameAsync(movie.AddedBy);
         movie.RatingChangedCallback = async (rating) =>
         {
-            await _supabaseService.UpdateMovieRatingAsync(movie.Id, rating);
+            await _supabaseService.UpdateMovieRatingAsync(movie.Id, movie.TmdbId, rating);
         };
         movie.WatchedStatusChangedCallback = async (status) =>
         {
-            await _supabaseService.UpdateMovieWatchedStatusAsync(movie.Id, status);
+            await _supabaseService.UpdateMovieWatchedStatusAsync(movie.Id, movie.TmdbId, status);
         };
         return movie;
     }
@@ -136,7 +136,8 @@ public partial class ListViewModel : ViewModelBase
     private async Task UpdateRatingAsync((Movie movie, int rating) args)
     {
         args.movie.Rating = args.rating;
-        await _supabaseService.UpdateMovieRatingAsync(args.movie.Id, args.rating);
+        await _supabaseService.UpdateMovieRatingAsync(args.movie.Id, args.movie.TmdbId, args.rating);
+        
     }
 
     [RelayCommand]
@@ -180,6 +181,9 @@ public partial class ListViewModel : ViewModelBase
             details?.Runtime ?? 0);
         if (movie != null)
         {
+            var existingRating = await _supabaseService.GetUserTmdbRatingAsync(movie.TmdbId);
+            movie.Rating = existingRating?.Rating ?? 0;
+            movie.WatchedStatus = existingRating != null ? Enum.Parse<WatchedStatus>(existingRating.WatchedStatus) : WatchedStatus.Unwatched;
             var attached = await AttachCallbacksAsync(movie);
             _allMovies.Add(attached);
             ApplyFilterAndSort();
@@ -309,7 +313,8 @@ public partial class ListViewModel : ViewModelBase
     [RelayCommand]
     private void SelectMovie(Movie movie)
     {
-        var detailVm = new MovieDetailViewModel(_authService, _supabaseService, movie, IsOwner);
+        var memberIds = Members.Select(m => m.Id).ToList();
+        var detailVm = new MovieDetailViewModel(_authService, _supabaseService, movie, IsOwner, memberIds);
         detailVm.OnBack += () =>
         {
             CurrentDetailView = null;

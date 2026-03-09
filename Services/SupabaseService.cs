@@ -83,7 +83,7 @@ public class SupabaseService
         var movies = new List<Movie>();
         foreach (var item in response.Models)
         {
-            var userData = await GetUserMovieDataAsync(item.Id);
+            var userRating = await GetUserTmdbRatingAsync(item.TmdbId);
             movies.Add(new Movie
             {
                 Id = item.Id,
@@ -92,10 +92,10 @@ public class SupabaseService
                 PosterUrl = item.PosterUrl,
                 Category = item.Category,
                 ReleaseDate = item.ReleaseDate,
+                Runtime = item.Runtime,
                 AddedBy = item.AddedBy,
-                Rating = userData?.Rating ?? 0,
-                WatchedStatus = userData != null ? Enum.Parse<WatchedStatus>(userData.WatchedStatus) : WatchedStatus.Unwatched,
-                Runtime = item.Runtime
+                Rating = userRating?.Rating ?? 0,
+                WatchedStatus = userRating != null ? Enum.Parse<WatchedStatus>(userRating.WatchedStatus) : WatchedStatus.Unwatched
             });
         }
         return movies;
@@ -142,17 +142,16 @@ public class SupabaseService
             .Delete();
     }
     
-    public async Task UpdateMovieRatingAsync(string movieId, int rating)
+    public async Task UpdateMovieRatingAsync(string movieId, string tmdbId, int rating)
     {
-        var userId = _authService.CurrentUser?.Id ?? string.Empty;
-        var existing = await GetUserMovieDataAsync(movieId);
-        await UpsertUserMovieDataAsync(movieId, rating, existing != null ? Enum.Parse<WatchedStatus>(existing.WatchedStatus) : WatchedStatus.Unwatched);
+        var existing = await GetUserTmdbRatingAsync(tmdbId);
+        await UpsertUserTmdbRatingAsync(tmdbId, rating, existing != null ? Enum.Parse<WatchedStatus>(existing.WatchedStatus) : WatchedStatus.Unwatched);
     }
 
-    public async Task UpdateMovieWatchedStatusAsync(string movieId, WatchedStatus status)
+    public async Task UpdateMovieWatchedStatusAsync(string movieId, string tmdbId, WatchedStatus status)
     {
-        var existing = await GetUserMovieDataAsync(movieId);
-        await UpsertUserMovieDataAsync(movieId, existing?.Rating ?? 0, status);
+        var existing = await GetUserTmdbRatingAsync(tmdbId);
+        await UpsertUserTmdbRatingAsync(tmdbId, existing?.Rating ?? 0, status);
     }
     
     public async Task<SupabaseProfile?> GetProfileByEmailAsync(string email)
@@ -361,5 +360,66 @@ public class SupabaseService
             .Where(x => x.Id == listId)
             .Set(x => x.Name, name)
             .Update();
+    }
+    
+    public async Task<SupabaseUserTmdbRating?> GetUserTmdbRatingAsync(string tmdbId)
+    {
+        try
+        {
+            var userId = _authService.CurrentUser?.Id ?? string.Empty;
+            return await _client
+                .From<SupabaseUserTmdbRating>()
+                .Where(x => x.UserId == userId && x.TmdbId == tmdbId)
+                .Single();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task UpsertUserTmdbRatingAsync(string tmdbId, int rating, WatchedStatus watchedStatus)
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+        var existing = await GetUserTmdbRatingAsync(tmdbId);
+
+        if (existing == null)
+        {
+            await _client
+                .From<SupabaseUserTmdbRating>()
+                .Insert(new SupabaseUserTmdbRating
+                {
+                    UserId = userId,
+                    TmdbId = tmdbId,
+                    Rating = rating,
+                    WatchedStatus = watchedStatus.ToString()
+                });
+        }
+        else
+        {
+            await _client
+                .From<SupabaseUserTmdbRating>()
+                .Where(x => x.UserId == userId && x.TmdbId == tmdbId)
+                .Set(x => x.Rating, rating)
+                .Set(x => x.WatchedStatus, watchedStatus.ToString())
+                .Update();
+        }
+    }
+
+    public async Task<List<SupabaseUserTmdbRating>> GetAllMemberTmdbRatingsAsync(string tmdbId, List<string> memberIds)
+    {
+        try
+        {
+            var response = await _client
+                .From<SupabaseUserTmdbRating>()
+                .Filter("tmdb_id", Postgrest.Constants.Operator.Equals, tmdbId)
+                .Filter("user_id", Postgrest.Constants.Operator.In, memberIds)
+                .Get();
+            return response.Models;
+        }
+        catch
+        {
+            return new List<SupabaseUserTmdbRating>();
+        }
     }
 }

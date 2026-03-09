@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -33,12 +34,15 @@ public partial class MovieDetailViewModel : ViewModelBase
     
     public event Action? OnBack;
 
-    public MovieDetailViewModel(AuthService authService, SupabaseService supabaseService, Movie movie, bool isListOwner)
+    private readonly List<string> _memberIds;
+
+    public MovieDetailViewModel(AuthService authService, SupabaseService supabaseService, Movie movie, bool isListOwner, List<string> memberIds)
     {
         _authService = authService;
         _supabaseService = supabaseService;
         _movie = movie;
         _isListOwner = isListOwner;
+        _memberIds = memberIds;
         _rating = movie.Rating;
         _watchedStatus = movie.WatchedStatus;
         _ = LoadDetailsAsync();
@@ -59,13 +63,13 @@ public partial class MovieDetailViewModel : ViewModelBase
 
     private async Task SaveAndReloadAsync()
     {
-        await _supabaseService.UpdateMovieRatingAsync(_movie.Id, Rating);
+        await _supabaseService.UpdateMovieRatingAsync(_movie.Id, _movie.TmdbId, Rating);
         await ReloadMemberDataAsync();
     }
 
     private async Task SaveWatchedStatusAsync(WatchedStatus status)
     {
-        await _supabaseService.UpdateMovieWatchedStatusAsync(_movie.Id, status);
+        await _supabaseService.UpdateMovieWatchedStatusAsync(_movie.Id, _movie.TmdbId, status);
         await ReloadMemberDataAsync();
     }
 
@@ -100,9 +104,9 @@ public partial class MovieDetailViewModel : ViewModelBase
     public async Task ReloadMemberDataAsync()
     {
         var currentUserId = _authService.CurrentUser?.Id ?? string.Empty;
-        var allData = await _supabaseService.GetAllMemberMovieDataAsync(_movie.Id);
+        var allRatings = await _supabaseService.GetAllMemberTmdbRatingsAsync(_movie.TmdbId, _memberIds);
         var memberDataList = new ObservableCollection<MemberMovieData>();
-        foreach (var data in allData)
+        foreach (var data in allRatings)
         {
             if (data.UserId == currentUserId) continue;
             var displayName = await _supabaseService.GetDisplayNameAsync(data.UserId);
