@@ -73,7 +73,7 @@ public class StarRatingControl : UserControl
 
             if (Rating == i * 2 - 1)
             {
-                filled.Clip = new Avalonia.Media.RectangleGeometry(new Rect(0, 0, 12, 24));
+                filled.Clip = new RectangleGeometry(new Rect(0, 0, 12, 24));
             }
 
             container.Children.Add(empty);
