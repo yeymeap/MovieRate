@@ -12,4 +12,5 @@ public class MovieComment
     public DateTime CreatedAt { get; set; }
     public bool IsOwn { get; set; } = false;
     public bool CanDelete { get; set; } = false;
+    public bool IsListOwner { get; set; } = false;
 }

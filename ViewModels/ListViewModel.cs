@@ -99,7 +99,13 @@ public partial class ListViewModel : ViewModelBase
             profile.IsSelf = profile.Id == _authService.CurrentUser?.Id;
             profile.ShowRemoveButton = IsOwner && !profile.IsOwner && !profile.IsSelf;
         }
-        Members = new ObservableCollection<SupabaseProfile>(memberProfiles);
+        
+        var sorted = memberProfiles
+            .OrderBy(p => p.IsOwner ? 0 : 1)
+            .ThenBy(p => p.DisplayName)
+            .ToList();
+
+        Members = new ObservableCollection<SupabaseProfile>(sorted);
         IsLoading = false;
         OnPropertyChanged(nameof(ShowEmptyMessage));
     }
@@ -314,7 +320,7 @@ public partial class ListViewModel : ViewModelBase
     private void SelectMovie(Movie movie)
     {
         var memberIds = Members.Select(m => m.Id).ToList();
-        var detailVm = new MovieDetailViewModel(_authService, _supabaseService, movie, IsOwner, memberIds);
+        var detailVm = new MovieDetailViewModel(_authService, _supabaseService, movie, IsOwner, memberIds, _list.OwnerId);
         detailVm.OnBack += () =>
         {
             CurrentDetailView = null;

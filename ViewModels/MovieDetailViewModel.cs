@@ -16,6 +16,7 @@ public partial class MovieDetailViewModel : ViewModelBase
     private readonly TmdbService _tmdbService = new();
     private readonly Movie _movie;
     private readonly bool _isListOwner;
+    private readonly string _listOwnerId;
 
     [ObservableProperty] private string _overview = string.Empty;
     [ObservableProperty] private string _genres = string.Empty;
@@ -36,13 +37,14 @@ public partial class MovieDetailViewModel : ViewModelBase
 
     private readonly List<string> _memberIds;
 
-    public MovieDetailViewModel(AuthService authService, SupabaseService supabaseService, Movie movie, bool isListOwner, List<string> memberIds)
+    public MovieDetailViewModel(AuthService authService, SupabaseService supabaseService, Movie movie, bool isListOwner, List<string> memberIds, string listOwnerId)
     {
         _authService = authService;
         _supabaseService = supabaseService;
         _movie = movie;
         _isListOwner = isListOwner;
         _memberIds = memberIds;
+        _listOwnerId = listOwnerId;
         _rating = movie.Rating;
         _watchedStatus = movie.WatchedStatus;
         _ = LoadDetailsAsync();
@@ -118,7 +120,7 @@ public partial class MovieDetailViewModel : ViewModelBase
             });
         }
         MemberData = memberDataList;
-    }
+    }   
 
     private async Task LoadCommentsAsync()
     {
@@ -137,7 +139,8 @@ public partial class MovieDetailViewModel : ViewModelBase
                 DisplayName = displayName,
                 Content = c.Content,
                 IsOwn = c.UserId == currentUserId,
-                CanDelete = c.UserId == currentUserId || _isListOwner
+                CanDelete = c.UserId == currentUserId || _isListOwner,
+                IsListOwner = c.UserId == _listOwnerId
             });
         }
         Comments = comments;
@@ -160,7 +163,8 @@ public partial class MovieDetailViewModel : ViewModelBase
                 DisplayName = displayName,
                 Content = comment.Content,
                 IsOwn = true,
-                CanDelete = true
+                CanDelete = true,
+                IsListOwner = comment.UserId == _listOwnerId
             });
             NewComment = string.Empty;
         }
