@@ -46,7 +46,7 @@
                  VerticalAlignment="Top"/>
 
           <!-- Info -->
-          <StackPanel Grid.Column="1" Spacing="12" Margin="24 0 0 0">
+          <StackPanel Grid.Column="1" Spacing="12" Margin="24 0 24 0">
             <TextBlock Text="{Binding Title}"
                        FontSize="28"
                        FontWeight="Bold"
