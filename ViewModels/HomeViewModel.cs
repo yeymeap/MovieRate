@@ -148,4 +148,13 @@ public partial class HomeViewModel : ViewModelBase
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
         CurrentUserName = await _supabaseService.GetDisplayNameAsync(userId);
     }
+    
+    [RelayCommand]
+    private async Task DuplicateListAsync(MovieList list)
+    {
+        var newName = $"{list.Name} (Copy)";
+        var duplicated = await _supabaseService.DuplicateListAsync(list.Id, newName);
+        if (duplicated != null)
+            Lists.Add(duplicated);
+    }
 }
