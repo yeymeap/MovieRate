@@ -236,7 +236,7 @@ public class SupabaseService
         }
     }
     
-    public async Task<SupabaseMovieUserData?> GetUserMovieDataAsync(string movieId)
+    private async Task<SupabaseMovieUserData?> GetUserMovieDataAsync(string movieId)
     {
         try
         {
@@ -378,7 +378,7 @@ public class SupabaseService
         }
     }
 
-    public async Task UpsertUserTmdbRatingAsync(string tmdbId, int rating, WatchedStatus watchedStatus)
+    private async Task UpsertUserTmdbRatingAsync(string tmdbId, int rating, WatchedStatus watchedStatus)
     {
         var userId = _authService.CurrentUser?.Id ?? string.Empty;
         var existing = await GetUserTmdbRatingAsync(tmdbId);
