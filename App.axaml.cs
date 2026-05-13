@@ -21,7 +21,6 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            DisableAvaloniaDataAnnotationValidation();
             var authService = new AuthService();
             Task.Run(async () => await authService.InitializeAsync()).Wait();
             desktop.MainWindow = new MainWindow
@@ -32,15 +31,5 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
-
-    private void DisableAvaloniaDataAnnotationValidation()
-    {
-        var dataValidationPluginsToRemove =
-            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
-
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
-    }
+    
 }
