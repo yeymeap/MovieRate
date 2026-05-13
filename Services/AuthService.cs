@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Supabase;
-using MovieRate.Models;
 
 namespace MovieRate.Services;
 
