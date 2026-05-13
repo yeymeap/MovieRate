@@ -422,4 +422,48 @@ public class SupabaseService
             return new List<SupabaseUserTmdbRating>();
         }
     }
+    
+    public async Task<MovieList?> DuplicateListAsync(string listId, string newName)
+    {
+        var userId = _authService.CurrentUser?.Id ?? string.Empty;
+
+        var newList = new SupabaseList
+        {
+            Name = newName,
+            OwnerId = userId
+        };
+        var listResponse = await _client.From<SupabaseList>().Insert(newList);
+        var createdList = listResponse.Models[0];
+
+        var movies = await _client
+            .From<SupabaseMovie>()
+            .Where(x => x.ListId == listId)
+            .Get();
+
+        foreach (var movie in movies.Models)
+        {
+            var newMovie = new SupabaseMovie
+            {
+                ListId = createdList.Id,
+                TmdbId = movie.TmdbId,
+                Title = movie.Title,
+                PosterUrl = movie.PosterUrl,
+                Category = movie.Category,
+                ReleaseDate = movie.ReleaseDate,
+                Runtime = movie.Runtime,
+                AddedBy = userId
+            };
+            await _client.From<SupabaseMovie>().Insert(newMovie);
+        }
+
+        return new MovieList
+        {
+            Id = createdList.Id,
+            Name = createdList.Name,
+            OwnerId = createdList.OwnerId,
+            Members = createdList.Members,
+            CreatedAt = createdList.CreatedAt,
+            IsOwner = true
+        };
+    }
 }
