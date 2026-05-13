@@ -45,7 +45,6 @@ public partial class ListViewModel : ViewModelBase
     public bool ShowEmptyMessage => HasNoMovies && !IsLoading;
     
     public event Action? OnListLeft;
-    public event Action<MovieDetailViewModel>? OnMovieSelected;
     public event Action<string>? OnListRenamed;
     
 
@@ -55,15 +54,6 @@ public partial class ListViewModel : ViewModelBase
         _supabaseService = supabaseService;
         _list = list;
         _ = LoadMoviesAsync();
-    }
-
-    private Movie AttachRatingCallback(Movie movie)
-    {
-        movie.RatingChangedCallback = async (rating) =>
-        {
-            await _supabaseService.UpdateMovieRatingAsync(movie.Id, movie.TmdbId, rating);
-        };
-        return movie;
     }
     
     private async Task<Movie> AttachCallbacksAsync(Movie movie)
