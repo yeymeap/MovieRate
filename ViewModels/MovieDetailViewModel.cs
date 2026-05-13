@@ -152,7 +152,6 @@ public partial class MovieDetailViewModel : ViewModelBase
         var comment = await _supabaseService.AddCommentAsync(_movie.Id, NewComment);
         if (comment != null)
         {
-            var currentUserId = _authService.CurrentUser?.Id ?? string.Empty;
             var displayName = await _supabaseService.GetDisplayNameAsync(comment.UserId);
             Comments.Add(new MovieComment
             {
