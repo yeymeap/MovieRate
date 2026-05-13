@@ -52,7 +52,6 @@ public partial class MovieDetailViewModel : ViewModelBase
 
     partial void OnRatingChanged(int value)
     {
-        // Update the movie object so list view stays in sync
         _movie.Rating = value;
         _ = SaveAndReloadAsync();
     }
