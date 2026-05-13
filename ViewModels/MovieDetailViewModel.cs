@@ -102,7 +102,7 @@ public partial class MovieDetailViewModel : ViewModelBase
         IsLoading = false;
     }
 
-    public async Task ReloadMemberDataAsync()
+    private async Task ReloadMemberDataAsync()
     {
         var currentUserId = _authService.CurrentUser?.Id ?? string.Empty;
         var allRatings = await _supabaseService.GetAllMemberTmdbRatingsAsync(_movie.TmdbId, _memberIds);
